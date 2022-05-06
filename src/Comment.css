@@ -1,0 +1,51 @@
+.commentdiv {
+  background: white;
+  height: 575px;
+  position: absolute;
+  right: 63px;
+  width: 213px;
+}
+
+.comment-icon {
+  display: inline-block;
+  position: absolute;
+  right: -21px;
+  cursor: pointer;
+  width: 27px;
+}
+
+.comment-icon::before {
+  content: url("../asset/CommentIcon.png");
+  height: 15px;
+  margin-left: -25px;
+  width: 15px;
+}
+
+span.comment {
+  border-bottom: 2px solid gold;
+  border-radius: 3px 3px 0 0;
+}
+
+.rcc-collapse {
+  font-family: sans-serif;
+  font-size: 13px;
+  margin-top: 5px;
+  overflow: hidden;
+  width: 222px;
+  line-height: 15px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  cursor: default;
+}
+
+.r-collapse {
+  min-height: 15px;
+  display: contents;
+  font-family: sans-serif;
+  line-height: 15px;
+  font-size: 13px;
+  margin-top: 5px;
+  width: 222px;
+  word-break: break-all;
+  cursor: default;
+}
