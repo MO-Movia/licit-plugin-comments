@@ -61,12 +61,12 @@ function getContent(type, schema: Schema, nodeAttrs, toDOM) {
   return content;
 }
 
-function getAnExistingAttribute(schema) {
+function getAnExistingAttribute(schema: Schema) {
   let existingAttr = null;
 
   try {
     existingAttr = schema['marks']['link']['attrs']['href'];
-  } catch (err) { }
+  } catch (err) { console.error(err); }
 
   return existingAttr;
 }

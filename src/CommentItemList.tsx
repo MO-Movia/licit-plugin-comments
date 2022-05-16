@@ -1,11 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import DateParser from './DateParser';
 import styled from 'styled-components';
 import CommentReply from './CommentReply';
 import { getAllMarksWithSameId, onClickWrapper } from './utils/document/DocumentHelpers';
+import { EditorView } from 'prosemirror-view';
 let counter = 0;
 let prevPos = 0;
+type CommentItemListProps = {
+  active: boolean;
+  data: { comment: string, timestamp: number }[];
+  view: EditorView;
+  // isNewComment: boolean;
+  // close: () => void;
+};
 
 const Wrapper = styled.div`
   padding: 3px 13px;  
@@ -26,20 +34,17 @@ const StyledReply = styled(CommentReply)`
   border-top: ${props => !props.isNewComment && '3px solid #E1EBFF'};
 `;
 
-const CommentItemList = props => {
-  const { active, className, view } = props;
+const CommentItemList = (props: CommentItemListProps) => {
+  const { active, view } = props;
   const [isActive, setActive] = useState(0);
   const [editedComment, setEditedComment] = useState('');
   const [selected, setSelected] = useState(0);
-
-  useEffect(() => {
-  }, [selected]);
 
   const getCommentMarkList = () => {
     const commentTracks = [];
     counter = 0;
     prevPos = 0;
-    view.state.tr.doc.descendants((node, pos) => {
+    view.state.tr.doc.descendants((node) => {
       if (node.marks && 0 < node.marks.length) {
         node.marks.some((mark) => {
           if ('comment' === mark.type.name && !(commentTracks.some(e => e.attrs.id === mark.attrs.id))) {
@@ -182,7 +187,7 @@ const CommentItemList = props => {
   };
 
   const cancel = (e, item) => {
-    if (null === e.relatedTarget || (e.relatedTarget&& 'postcommentt' !== e.relatedTarget.id)) {
+    if (null === e.relatedTarget || (e.relatedTarget && 'postcommentt' !== e.relatedTarget.id)) {
       // [FS] IRAD-1743 24-03-2022
       // Don't further propogate and avoid default.
       e.stopPropagation();
@@ -234,7 +239,7 @@ const CommentItemList = props => {
         </button>
       </div>
     </div>;
-  };
+  }
 
   function renderDefaultview(item) {
     if (item.timestamp === selected) { return null; }
@@ -251,9 +256,15 @@ const CommentItemList = props => {
 
   return (
     <>
-      {getCommentMarkList().map((commentTrack, index) => {
+      {getCommentMarkList().map((commentTrack) => {
         if (commentTrack.type && commentTrack.type.name === 'comment') {
-          let pos = view.domAtPos(commentTrack.attrs.markTo).node.parentNode.offsetTop;
+          let parentNode: Node;
+          parentNode = view.domAtPos(commentTrack.attrs.markTo).node.parentNode;
+          let pos = 0;
+          if (parentNode) {
+            pos = parentNode['offsetTop']
+          }
+
           if (prevPos === pos) {
             // pos = pos + 42;
             // counter = counter - 1;
@@ -270,7 +281,7 @@ const CommentItemList = props => {
           prevPos = pos;
           const topPosition = pos + 'px';
           return (
-            <Wrapper active={active} className={className} id={commentTrack.attrs.id} key={commentTrack.attrs.id}
+            <Wrapper active={active} id={commentTrack.attrs.id} key={commentTrack.attrs.id}
               onMouseLeave={() => showReplyButton(commentTrack.attrs.id, false)}
               onMouseOver={() => showReplyButton(commentTrack.attrs.id, true)}
               style={{
@@ -279,7 +290,7 @@ const CommentItemList = props => {
               }}>
 
               <ul style={{ listStyleType: 'none', marginBottom: '4px', paddingLeft: '0' }} >
-                {commentTrack.attrs.conversation.map((item, i) => (
+                {commentTrack.attrs.conversation.map((item) => (
                   <li id={'comment' + item.timestamp} key={'comment' + item.timestamp}
                     onClick={onClickWrapper.bind(this, item.timestamp, view, commentTrack, true, true)}
                     style={{
@@ -298,7 +309,12 @@ const CommentItemList = props => {
 
                     </div>
                     <div style={{ fontFamily: 'Fira Sans Condensed', fontSize: '13px', fontStyle: 'italic', color: '#7c7878', cursor: 'default' }}>
-                      <DateParser timestamp={item.timestamp}>
+                      {/* <DateParser timestamp={item.timestamp}>
+                        {(timeAgo) => {
+                          return `${timeAgo} ago`;
+                        }}
+                      </DateParser> */}
+                        <DateParser timestamp={item.timestamp}>
                         {(timeStamp, timeAgo) => {
                           return `${timeAgo} ago`;
                         }}

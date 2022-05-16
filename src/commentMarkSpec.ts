@@ -1,8 +1,7 @@
-// @flow
-
 import type { MarkSpec } from './Types';
+import { Mark } from 'prosemirror-model';
 
-const CommentMarkSpec: MarkSpec = {
+const commentMarkSpec: MarkSpec = {
   attrs: {
     class: { default: 'comment' },
     id: { default: '' },
@@ -12,7 +11,7 @@ const CommentMarkSpec: MarkSpec = {
     markFrom: { default: null },
     markTo: { default: null },
     overridden: { default: true },
-    appliedHighlight:{
+    appliedHighlight: {
       default: 'transparent'
     }
   },
@@ -37,8 +36,8 @@ const CommentMarkSpec: MarkSpec = {
     },
   ],
 
-  toDOM(hook, next) {
-    hook.value = [
+  toDOM(hook: Mark) {
+    return [
       'span',
       {
         class: hook.attrs.class,
@@ -52,8 +51,7 @@ const CommentMarkSpec: MarkSpec = {
         'data-appliedHighlight': hook.attrs.appliedHighlight,
       },
     ];
-    return hook.value;
   },
 };
 
-export default CommentMarkSpec;
+export default commentMarkSpec;

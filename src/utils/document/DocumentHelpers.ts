@@ -6,13 +6,12 @@ export const findAllMarksWithSameId = (state, mark) => {
   const allNodes = findChildrenByMark(state.doc, markType, true);
 
   const allMarksWithSameId = [];
-  allNodes.map(node => {
-    node.node.marks.filter(value => {
+  allNodes.map((node) => {
+    node.node.marks.filter((value) => {
       if (mark.type.name === type && mark.attrs.id === value.attrs.id) {
         allMarksWithSameId.push(node);
       }
     });
-    return allMarksWithSameId;
   });
   return allMarksWithSameId;
 };
@@ -42,13 +41,12 @@ export const flatten = (node, descend = true) => {
   }
   const result = [];
   node.descendants((child, pos) => {
-    result.push({ node: child, pos });
+    result.push({node: child, pos});
     if (!descend) {
       return false;
     }
     return true;
-  }
-  );
+  });
   return result;
 };
 

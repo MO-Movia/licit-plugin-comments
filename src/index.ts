@@ -4,10 +4,11 @@ import { Plugin, PluginKey } from 'prosemirror-state';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 import { Schema } from 'prosemirror-model';
 import { CommentView } from './CommentView';
-import CommentMarkSpec from './CommentMarkSpec';
+import commentMarkSpec from './commentMarkSpec';
 import './Comment.css';
 import '@modusoperandi/licit-ui-commands/dist/ui/czi-pop-up.css';
 import { applyEffectiveSchema } from './CommentSchema';
+import OrderedMap from 'orderedmap';
 
 const commentPlugin = new PluginKey('commentPlugin');
 const MARKTYPE = 'comment';
@@ -18,13 +19,13 @@ export class CommentPlugin extends Plugin {
     super({
       key: commentPlugin,
       state: {
-        init(config, state) {
+        init(_config, state) {
           const {
             doc
           } = state;
           return commentDeco(doc, state);
         },
-        apply(tr, prev, _, newState) {
+        apply(tr, _prev, _, newState) {
           if (commentView) {
             commentView.showCommentList();
           }
@@ -36,14 +37,16 @@ export class CommentPlugin extends Plugin {
         return commentView;
       },
       props: {
-        nodeViews: [],
+        nodeViews: {},
         decorations(state) { return this.getState(state); },
         handleDOMEvents: {
           mouseover(view, event) {
             highLightComment(view, event, true);
+            return false;
           },
           mouseout(view, event) {
             highLightComment(view, event, false);
+            return false;
           },
         },
       },
@@ -54,9 +57,9 @@ export class CommentPlugin extends Plugin {
     schema = applyEffectiveSchema(schema);
     const nodes = schema.spec.nodes;
     const commentmark = {
-      'comment': CommentMarkSpec
+      'comment': commentMarkSpec
     };
-    const marks = schema.spec.marks.append(commentmark);
+    const marks = (schema.spec.marks as OrderedMap).append(commentmark);
     return new Schema({
       nodes: nodes,
       marks: marks,
@@ -64,7 +67,7 @@ export class CommentPlugin extends Plugin {
   }
 }
 
-function validateSelection(state) {
+function validateSelection(state) : boolean {
   const showCommentIcon = true;
   if (state.selection.from === state.selection.to) {
     return false;

@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import styled, { css } from 'styled-components';
 import { grid, th } from '@pubsweet/ui-toolkit';
 import { v4 as uuidv4 } from 'uuid';
-import {findAllMarksWithSameId} from './utils/document/DocumentHelpers';
 
 const Wrapper = styled.div`
   background: ${th('colorBackgroundHue')};
@@ -46,8 +45,8 @@ const Button = styled.button`
   color: gray;
   padding: ${grid(2)} ${grid(4)};
 
-  ${props => props.primary && primary}
-  ${props => props.disabled && 'cursor: not-allowed;'}
+  ${(props) => props.primary && primary}
+  ${(props) => props.disabled && 'cursor: not-allowed;'}
 `;
 
 const ButtonGroup = styled.div`
@@ -56,7 +55,7 @@ const ButtonGroup = styled.div`
   }
 `;
 
-const CommentReply = props => {
+const CommentReply = (props) => {
   const { className, isNewComment, view, commentObj } = props;
   const commentInput = useRef(null);
   const [commentValue, setCommentValue] = useState('');
@@ -67,7 +66,7 @@ const CommentReply = props => {
     });
   }, []);
 
-  const handleSubmit = e => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     e.stopPropagation();
     onClickPost(commentValue);
@@ -81,8 +80,21 @@ const CommentReply = props => {
     }
   };
 
-  const resetValue = e => {
+  const resetValue = () => {
     hideReplyDiv(true);
+  };
+  type commentMarkaAttrs = {
+    class: { default: 'comment' },
+    id: string,
+    group: { default: '' },
+    viewid: { default: '' },
+    conversation: [],
+    markFrom: { default: null },
+    markTo: { default: null },
+    overridden: { default: true },
+    appliedHighlight: {
+      default: 'transparent'
+    }
   };
 
   const onClickPost = (comment): void => {
@@ -92,30 +104,20 @@ const CommentReply = props => {
     const { empty } = selection;
     const id = uuidv4();
     const markType = view.state.schema.marks.comment;
-
-    let allCommentsWithSameId = [];
-
     if (empty) {
       from = selection.$from.before(1);
       to = selection.$to.after(1);
-    }
-
-    if (view) {
-      allCommentsWithSameId = findAllMarksWithSameId(
-        view.state,
-        commentObj,
-      );
     }
 
     const obj = {
       comment: comment,
       timestamp: Math.floor(Date.now()),
     };
-    let attrs = {};
+    let attrs;
     if (null === commentObj) {
       attrs = {
         conversation: [],
-        id: id,
+        id,
         markFrom: from,
         markTo: to
       };
@@ -125,16 +127,14 @@ const CommentReply = props => {
       commentObj.attrs.conversation.push(obj);
     }
 
-    allCommentsWithSameId.forEach(singleComment => {
-      tr = tr.removeMark(commentObj.attrs.markFrom, commentObj.attrs.markTo, markType);
-      tr = tr.addMark((commentObj && commentObj.attrs) ? commentObj.attrs.markFrom : from, (commentObj && commentObj.attrs) ? commentObj.attrs.markTo : to,
-        markType.create(
-          commentObj.attrs
-         ));
-      if (view.dispatch) {
-        view.dispatch(tr);
-      }
-    });
+    tr = tr.removeMark(commentObj.attrs.markFrom, commentObj.attrs.markTo, markType);
+    tr = tr.addMark((commentObj && commentObj.attrs) ? commentObj.attrs.markFrom : from, (commentObj && commentObj.attrs) ? commentObj.attrs.markTo : to,
+      markType.create(
+        commentObj.attrs
+      ));
+    if (view.dispatch) {
+      view.dispatch(tr);
+    }
     hideReplyDiv(true);
   };
 
@@ -144,12 +144,12 @@ const CommentReply = props => {
       <form onSubmit={handleSubmit}>
         <TextWrapper id={'txtComment'}>
           <ReplyTextArea
-          autoFocus
-          cols='5'
-          id={'txtComment'}
+            autoFocus
+            cols='5'
+            id={'txtComment'}
             // onBlur={() => onBlur(commentInput.current.value)}
-          onChange={() => setCommentValue(commentInput.current.value)}
-          onKeyDown={e => {
+            onChange={() => setCommentValue(commentInput.current.value)}
+            onKeyDown={e => {
               if (e.keyCode === 13 && !e.shiftKey) {
                 e.preventDefault();
                 if (commentValue) handleSubmit(e);
@@ -164,7 +164,7 @@ const CommentReply = props => {
 
         <ActionWrapper>
           <ButtonGroup>
-            <Button disabled={commentValue.length === 0} id={'btnPost'}  primary style={{ backgroundColor: '#707581' }} type="submit">
+            <Button disabled={commentValue.length === 0} id={'btnPost'} primary style={{ backgroundColor: '#707581' }} type="submit">
               Post
             </Button>
 

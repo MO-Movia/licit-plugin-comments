@@ -33,6 +33,7 @@ span.comment {
   overflow: hidden;
   width: 222px;
   line-height: 15px;
+  display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   cursor: default;
@@ -48,4 +49,26 @@ span.comment {
   width: 222px;
   word-break: break-all;
   cursor: default;
+}
+
+.commenttxtarea {
+  border: 1px solid #584848;
+    height: 65px;
+    position: relative;
+    right: 5px;
+    /* font-family: ${th('fontWriting')}; */
+    width: 100%;
+}
+
+.actionwrapper{
+  display: flex;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+.btn{
+  border: 0;
+  border-radius: 5px;
+  cursor: pointer;
+  color: gray;
+  /* padding: ${grid(2)} ${grid(4)};   */
 }
