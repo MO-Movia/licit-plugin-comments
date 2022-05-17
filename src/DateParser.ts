@@ -1,5 +1,4 @@
 import moment from 'moment';
-import propTypes from 'prop-types';
 
 const getDuration = (timestamp) => {
   const today = moment();

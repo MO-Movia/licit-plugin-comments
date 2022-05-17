@@ -1,7 +1,7 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 import { grid, th } from '@pubsweet/ui-toolkit';
 import { v4 as uuidv4 } from 'uuid';
 import CommentItemList from './CommentItemList';
@@ -35,10 +35,6 @@ const ActionWrapper = styled.div`
     justify-content: flex-end;
     margin-top: 4px;
   `;
-const primary = css`
-    background: ${th('colorPrimary')};
-    color: white;
-  `;
 
 const Button = styled.button`
     border: 0;
@@ -70,12 +66,9 @@ type CommentUIProps = {
   close: () => void;
 };
 let inputComment = '';
-let _popUp = null;
 
 const CommentUI = (props: CommentUIProps) => {
-
-
-  const { editorView, disabled } = props;
+  const { editorView } = props;
 
   // constructor(props: CommentUIProps) {
   //   super(props);
@@ -85,7 +78,7 @@ const CommentUI = (props: CommentUIProps) => {
   // }
   const setCommentValue = (e: React.ChangeEvent) => {
     inputComment = (e.target as HTMLInputElement).value;
-  }
+  };
 
   const cancel = (): void => {
     props.close();
@@ -158,7 +151,7 @@ const CommentUI = (props: CommentUIProps) => {
                 border: '0px',
                 borderRadius: '5px',
                 color: 'white',
-                cursor: 'pointer'                
+                cursor: 'pointer'
               }} type="button">
               Post
             </Button>
@@ -171,6 +164,6 @@ const CommentUI = (props: CommentUIProps) => {
     </div>
   </Wrapper>
   );
-}
+};
 
 export default CommentUI;

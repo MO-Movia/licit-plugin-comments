@@ -83,19 +83,6 @@ const CommentReply = (props) => {
   const resetValue = () => {
     hideReplyDiv(true);
   };
-  type commentMarkaAttrs = {
-    class: { default: 'comment' },
-    id: string,
-    group: { default: '' },
-    viewid: { default: '' },
-    conversation: [],
-    markFrom: { default: null },
-    markTo: { default: null },
-    overridden: { default: true },
-    appliedHighlight: {
-      default: 'transparent'
-    }
-  };
 
   const onClickPost = (comment): void => {
     let { tr } = view.state;

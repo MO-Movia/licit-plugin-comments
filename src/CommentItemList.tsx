@@ -186,7 +186,7 @@ const CommentItemList = (props: CommentItemListProps) => {
     }
   };
 
-  const cancel = (e, item) => {
+  const cancel = (e, item, commentTrack) => {
     if (null === e.relatedTarget || (e.relatedTarget && 'postcommentt' !== e.relatedTarget.id)) {
       // [FS] IRAD-1743 24-03-2022
       // Don't further propogate and avoid default.
@@ -195,6 +195,7 @@ const CommentItemList = (props: CommentItemListProps) => {
       setSelected(0);
       setActive(item.timestamp);
       hideEditButtons(item);
+      onClickWrapper(item.timestamp, view, commentTrack, false, false);
     }
 
   };
@@ -203,7 +204,7 @@ const CommentItemList = (props: CommentItemListProps) => {
     return <div>
       <form>
         <textarea defaultValue={item.comment} id={'editcomment' + item.timestamp}
-          onBlur={(e) => cancel(e, item)}
+          onBlur={(e) => cancel(e, item, commentTrack)}
           onChange={setComment.bind(this)}
           onMouseOver={() => onClickWrapper(item.timestamp, view, commentTrack, false, true)}
           style={{
@@ -228,7 +229,7 @@ const CommentItemList = (props: CommentItemListProps) => {
           }} type='button'>
           Post
         </button>
-        <button onClick={(e) => cancel(e, item)} style={{
+        <button onClick={(e) => cancel(e, item, commentTrack)} style={{
           backgroundColor: '#E0E2E7', border: '0',
           borderRadius: '5px',
           cursor: 'pointer',
@@ -258,11 +259,10 @@ const CommentItemList = (props: CommentItemListProps) => {
     <>
       {getCommentMarkList().map((commentTrack) => {
         if (commentTrack.type && commentTrack.type.name === 'comment') {
-          let parentNode: Node;
-          parentNode = view.domAtPos(commentTrack.attrs.markTo).node.parentNode;
+          const parentNode =view.domAtPos(commentTrack.attrs.markTo).node.parentNode;
           let pos = 0;
           if (parentNode) {
-            pos = parentNode['offsetTop']
+            pos = parentNode['offsetTop'];
           }
 
           if (prevPos === pos) {
