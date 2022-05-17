@@ -1,5 +1,5 @@
 {
-  "name": "@mo/licit-comment",
+  "name": "@modusoperandi/licit-comment",
   "version": "0.0.2-0",
   "subversion": "1",
   "description": "Comment plugin built with React and ProseMirror",
@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "test": "jest --coverage --passWithNoTests",
-    "build:clean": "rm -rf dist/ && rm -f mo-licit-comment-*.*.*.tgz",
+    "build:clean": "rm -rf dist/ && rm -f modusoperandi-licit-comment-*.*.*.tgz",
     "build:ts": "tsc -p tsconfig.json",
     "webpack": "webpack",
     "build:babel": "babel src --out-dir dist --extensions .ts,.tsx",
