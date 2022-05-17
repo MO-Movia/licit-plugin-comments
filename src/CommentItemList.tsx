@@ -315,7 +315,7 @@ const CommentItemList = (props: CommentItemListProps) => {
                         }}
                       </DateParser> */}
                         <DateParser timestamp={item.timestamp}>
-                        {(timeStamp, timeAgo) => {
+                        {(_timeStamp, timeAgo) => {
                           return `${timeAgo} ago`;
                         }}
                       </DateParser>
