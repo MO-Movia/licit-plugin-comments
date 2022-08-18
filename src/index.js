@@ -1,15 +1,17 @@
 // /* eslint-disable */
 
-import { Plugin, PluginKey } from 'prosemirror-state';
-import { Decoration, DecorationSet } from 'prosemirror-view';
-import { Schema } from 'prosemirror-model';
-import { CommentView } from './CommentView';
+import {Plugin, PluginKey} from 'prosemirror-state';
+import {Decoration, DecorationSet} from 'prosemirror-view';
+import {Schema} from 'prosemirror-model';
+import {CommentView} from './CommentView';
 import CommentMarkSpec from './CommentMarkSpec';
 import './Comment.css';
 import '@modusoperandi/licit-ui-commands/dist/ui/czi-pop-up.css';
-import { applyEffectiveSchema } from './CommentSchema';
+import {applyEffectiveSchema} from './CommentSchema';
+import {COMMENT_KEY} from './Constants';
+import {getCommentContainer} from './utils/document/DocumentHelpers';
 
-const commentPlugin = new PluginKey('commentPlugin');
+const commentPlugin = new PluginKey(COMMENT_KEY);
 const MARKTYPE = 'comment';
 let commentView;
 
@@ -19,9 +21,7 @@ export class CommentPlugin extends Plugin {
       key: commentPlugin,
       state: {
         init(config, state) {
-          const {
-            doc
-          } = state;
+          const {doc} = state;
           return commentDeco(doc, state);
         },
         apply(tr, prev, _, newState) {
@@ -37,7 +37,9 @@ export class CommentPlugin extends Plugin {
       },
       props: {
         nodeViews: [],
-        decorations(state) { return this.getState(state); },
+        decorations(state) {
+          return this.getState(state);
+        },
         handleDOMEvents: {
           mouseover(view, event) {
             highLightComment(view, event, true);
@@ -54,7 +56,7 @@ export class CommentPlugin extends Plugin {
     schema = applyEffectiveSchema(schema);
     const nodes = schema.spec.nodes;
     const commentmark = {
-      'comment': CommentMarkSpec
+      comment: CommentMarkSpec,
     };
     const marks = schema.spec.marks.append(commentmark);
     return new Schema({
@@ -68,18 +70,21 @@ function validateSelection(state) {
   const showCommentIcon = true;
   if (state.selection.from === state.selection.to) {
     return false;
-  }
-  else {
-    if (state.selection.node && 'paragraph' !== state.selection.node.type.name) {
+  } else {
+    if (
+      state.selection.node &&
+      'paragraph' !== state.selection.node.type.name
+    ) {
       return false;
-    }
-    else {
+    } else {
       const node = state.tr.doc.nodeAt(state.selection.from);
       if (node) {
-        if (node.marks && node.marks.find(mark => mark.type.name === 'link')) {
+        if (
+          node.marks &&
+          node.marks.find((mark) => mark.type.name === 'link')
+        ) {
           return false;
-        }
-        else if ('math' === node.type.name) {
+        } else if ('math' === node.type.name) {
           return false;
         }
       }
@@ -93,9 +98,15 @@ function commentDeco(doc, state) {
     return null;
   }
   const decos = [];
-  decos.push(Decoration.inline(state.selection.from, state.selection.to, {
-    class: 'problem'
-  }), Decoration.widget(state.selection.from, commentIcon(state.selection.empty, state)));
+  decos.push(
+    Decoration.inline(state.selection.from, state.selection.to, {
+      class: 'problem',
+    }),
+    Decoration.widget(
+      state.selection.from,
+      commentIcon(state.selection.empty, state)
+    )
+  );
   return DecorationSet.create(doc, decos);
 }
 
@@ -109,7 +120,7 @@ function highLightComment(view, e, highlight) {
 
     const nodePos = view.posAtCoords({
       left: e.clientX,
-      top: clientY
+      top: clientY,
     });
 
     let pos = null;
@@ -128,31 +139,35 @@ function showCommentHighlight(view, pos, highlight) {
   if (parentNode) {
     if (parentNode.marks) {
       let markFound;
-      const actualMark = parentNode.marks.find(mark => mark.type.name === MARKTYPE);
+      const actualMark = parentNode.marks.find(
+        (mark) => mark.type.name === MARKTYPE
+      );
       if (actualMark) {
-        clearCommentHighlight();
+        clearCommentHighlight(view);
         markFound = {
           attrs: actualMark.attrs,
         };
-      }
-      else {
-        clearCommentHighlight();
+      } else {
+        clearCommentHighlight(view);
       }
       if (markFound) {
-        const commentDiv = document.getElementById('comment' + markFound.attrs.conversation[0].timestamp);
+        const commentDiv = getCommentContainer(view).querySelector(
+          '#comment' + markFound.attrs.conversation[0].timestamp
+        );
         if (commentDiv) {
-          commentDiv.style.backgroundColor = highlight ? '#e9d8d8' : 'transparent';
+          commentDiv.style.backgroundColor = highlight
+            ? '#e9d8d8'
+            : 'transparent';
         }
       }
     }
-  }
-  else {
-    clearCommentHighlight();
+  } else {
+    clearCommentHighlight(view);
   }
 }
 
-function clearCommentHighlight() {
-  const commentList = document.getElementsByTagName('li');
+function clearCommentHighlight(view) {
+  const commentList = getCommentContainer(view).querySelectorAll('li');
   for (let i = 0, len = commentList.length; i < len; i++) {
     commentList[i].style.backgroundColor = 'transparent';
   }
@@ -164,9 +179,14 @@ function commentIcon(hideIcon, state) {
   icon.className = 'comment-icon';
   icon.style.visibility = hideIcon ? 'hidden' : 'visible';
   icon.style.marginLeft = '15px';
-  const commentUIDiv = document.getElementById('commentUIDiv');
-  if (commentUIDiv) {
-    commentUIDiv.style.visibility = icon.style.visibility;
+
+  if (commentView) {
+    const commentUIDiv = getCommentContainer(commentView.view).querySelector(
+      '#commentUIDiv'
+    );
+    if (commentUIDiv) {
+      commentUIDiv.style.visibility = icon.style.visibility;
+    }
   }
 
   icon.onclick = function (e) {
