@@ -13,7 +13,6 @@ import {getCommentContainer} from './utils/document/DocumentHelpers';
 
 const commentPlugin = new PluginKey(COMMENT_KEY);
 const MARKTYPE = 'comment';
-let commentView;
 
 export class CommentPlugin extends Plugin {
   constructor() {
@@ -24,16 +23,16 @@ export class CommentPlugin extends Plugin {
           const {doc} = state;
           return commentDeco(doc, state);
         },
-        apply(tr, prev, _, newState) {
-          if (commentView) {
-            commentView.showCommentList();
+        apply(tr, _prev, _, newState) {
+          if (this.spec.commentView) {
+            this.spec.commentView.showCommentList();
           }
-          return commentDeco(tr.doc, newState);
+          return commentDeco(tr.doc, newState, this.spec.commentView);
         },
       },
       view(editorView) {
-        commentView = new CommentView(editorView);
-        return commentView;
+        this.commentView = new CommentView(editorView);
+        return this.commentView;
       },
       props: {
         nodeViews: [],
@@ -42,10 +41,10 @@ export class CommentPlugin extends Plugin {
         },
         handleDOMEvents: {
           mouseover(view, event) {
-            highLightComment(view, event, true);
+            highLightComment(view, event, true, this.spec.commentView);
           },
           mouseout(view, event) {
-            highLightComment(view, event, false);
+            highLightComment(view, event, false, this.spec.commentView);
           },
         },
       },
@@ -93,7 +92,7 @@ function validateSelection(state) {
   return showCommentIcon;
 }
 
-function commentDeco(doc, state) {
+function commentDeco(doc, state, commentView) {
   if (!validateSelection(state)) {
     return null;
   }
@@ -104,13 +103,13 @@ function commentDeco(doc, state) {
     }),
     Decoration.widget(
       state.selection.from,
-      commentIcon(state.selection.empty, state)
+      commentIcon(state.selection.empty, state, commentView)
     )
   );
   return DecorationSet.create(doc, decos);
 }
 
-function highLightComment(view, e, highlight) {
+function highLightComment(view, e, highlight, commentView) {
   if (commentView) {
     let clientY = 0;
     clientY = e.clientY;
@@ -173,7 +172,7 @@ function clearCommentHighlight(view) {
   }
 }
 
-function commentIcon(hideIcon, state) {
+function commentIcon(hideIcon, state, commentView) {
   const icon = document.createElement('div');
   icon.id = 'commentIcon' + state.selection.from;
   icon.className = 'comment-icon';
