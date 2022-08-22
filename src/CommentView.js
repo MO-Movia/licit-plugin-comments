@@ -53,13 +53,33 @@ export class CommentView {
     this._popup && this._popup.close();
   }
 
-  showCommentList() {
+  showCommentList(state) {
     const commentDiv = this.getCommentUI();
     const active = false;
     if (commentDiv) {
+      let setMarginLeft = false;
+      state.tr.doc.descendants((node) => {
+        if (node.marks && 0 < node.marks.length) {
+          node.marks.some((mark) => {
+            if ('comment' === mark.type.name) {
+              setMarginLeft = true;
+              return true;
+            } else {
+              return false;
+            }
+          });
+        }
+        return true;
+      });
+      this.view.dom.style.marginLeft = setMarginLeft ? '10px' : 'auto';
       this.setCommentDivWidth(commentDiv);
       ReactDOM.render(
-        <CommentItemList active={active} data={null} view={this.view} />,
+        <CommentItemList
+          active={active}
+          data={null}
+          state={state}
+          view={this.view}
+        />,
         commentDiv
       );
     }

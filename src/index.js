@@ -25,7 +25,7 @@ export class CommentPlugin extends Plugin {
         },
         apply(tr, _prev, _, newState) {
           if (this.spec.commentView) {
-            this.spec.commentView.showCommentList();
+            this.spec.commentView.showCommentList(newState);
           }
           return commentDeco(tr.doc, newState, this.spec.commentView);
         },
@@ -79,11 +79,10 @@ function validateSelection(state) {
       const node = state.tr.doc.nodeAt(state.selection.from);
       if (node) {
         if (
-          node.marks &&
-          node.marks.find((mark) => mark.type.name === 'link')
+          (node.marks &&
+            node.marks.find((mark) => mark.type.name === 'link')) ||
+          'math' === node.type.name
         ) {
-          return false;
-        } else if ('math' === node.type.name) {
           return false;
         }
       }

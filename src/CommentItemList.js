@@ -31,18 +31,20 @@ const StyledReply = styled(CommentReply)`
 `;
 
 const CommentItemList = (props) => {
-  const {active, className, view} = props;
+  const {active, className, view, state} = props;
   const [isActive, setActive] = useState(0);
   const [editedComment, setEditedComment] = useState('');
   const [selected, setSelected] = useState(0);
 
-  useEffect(() => {}, [selected]);
+  useEffect(() => {
+    // This is intentional
+  }, [selected]);
 
   const getCommentMarkList = () => {
     const commentTracks = [];
     counter = 0;
     prevPos = 0;
-    view.state.tr.doc.descendants((node, pos) => {
+    state.tr.doc.descendants((node, _pos) => {
       if (node.marks && 0 < node.marks.length) {
         node.marks.some((mark) => {
           if (
@@ -74,7 +76,7 @@ const CommentItemList = (props) => {
   };
 
   const removeCommentMark = (tr, commentTrack) => {
-    const commentMark = view.state.schema.marks.comment;
+    const commentMark = state.schema.marks.comment;
     const commentnodePos = getCommentWordPos(tr, commentTrack.attrs.id);
     const node = tr.doc.nodeAt(commentnodePos);
     if (node) {
@@ -85,11 +87,11 @@ const CommentItemList = (props) => {
   };
 
   const onResolveComment = (commentTrack) => {
-    const {tr} = view.state;
+    const {tr} = state;
     const trans = removeCommentMark(tr, commentTrack);
 
     if (view.dispatch) {
-      view.dispatch(trans);
+      view.dispatch(trans.scrollIntoView());
     }
   };
 
@@ -114,12 +116,12 @@ const CommentItemList = (props) => {
     e.stopPropagation();
     e.preventDefault();
 
-    let {tr} = view.state;
+    let {tr} = state;
     setSelected(0);
-    const markType = view.state.schema.marks.comment;
+    const markType = state.schema.marks.comment;
     let allCommentsWithSameId = [];
     if (view) {
-      allCommentsWithSameId = getAllMarksWithSameId(view.state, commentTrack);
+      allCommentsWithSameId = getAllMarksWithSameId(state, commentTrack);
       allCommentsWithSameId.forEach((eachComment) => {
         eachComment.attrs.conversation.forEach((comment) => {
           if (comment.timestamp === item.timestamp) {
@@ -137,7 +139,7 @@ const CommentItemList = (props) => {
           }
         });
         if (view.dispatch) {
-          view.dispatch(tr);
+          view.dispatch(tr.scrollIntoView());
         }
       });
     }
@@ -175,10 +177,10 @@ const CommentItemList = (props) => {
   };
 
   const isEditMode = (id) => {
-    const editComment = getCommentContainer(view).querySelector(
+    const container = getCommentContainer(view).querySelector(
       '#editcomment' + id
     );
-    return editComment ? true : false;
+    return container ? true : false;
   };
 
   const toggleClass = (id, commentTrack) => {
@@ -304,11 +306,7 @@ const CommentItemList = (props) => {
           let pos = view.domAtPos(commentTrack.attrs.markTo).node.parentNode
             .offsetTop;
           if (prevPos === pos) {
-            // pos = pos + 42;
-            // counter = counter - 1;
-            // if (counter === 1) {
-            //   pos = pos - (counter * 42);
-            // }
+            // This is intentional
           }
           if (counter > 1) {
             pos = pos - counter * 42;
@@ -370,7 +368,6 @@ const CommentItemList = (props) => {
                         toggleClass(item.timestamp, commentTrack)
                       }
                     >
-                      {/* {renderDefaultview(item)} */}
                       {selected == item.timestamp
                         ? renderEditview(item, commentTrack)
                         : renderDefaultview(item)}

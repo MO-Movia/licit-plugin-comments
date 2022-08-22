@@ -1,13 +1,9 @@
 // @flow
 
 import React from 'react';
-import ReactDOM from 'react-dom';
 import styled, {css} from 'styled-components';
 import {grid, th} from '@pubsweet/ui-toolkit';
 import {v4 as uuidv4} from 'uuid';
-import CommentItemList from './CommentItemList';
-import {COMMENT_KEY} from './Constants';
-import {getCommentContainer} from './utils/document/DocumentHelpers';
 
 class CommentUI extends React.PureComponent<any, any> {
   _popUp = null;
@@ -57,22 +53,7 @@ class CommentUI extends React.PureComponent<any, any> {
       highLightMarkType.create(attrs)
     );
     if (this.state.editorView.dispatch) {
-      this.state.editorView.dispatch(tr);
-      const active = false;
-      const editorDiv = getCommentContainer(this.state.editorView);
-      if (editorDiv) {
-        const commentDiv = editorDiv.querySelector('#' + COMMENT_KEY);
-        if (commentDiv) {
-          ReactDOM.render(
-            <CommentItemList
-              active={active}
-              data={attrs.conversation}
-              view={this.state.editorView}
-            />,
-            commentDiv
-          );
-        }
-      }
+      this.state.editorView.dispatch(tr.scrollIntoView());
     }
   };
 

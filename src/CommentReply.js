@@ -138,7 +138,7 @@ const CommentReply = (props) => {
         markType.create(commentObj.attrs)
       );
       if (view.dispatch) {
-        view.dispatch(tr);
+        view.dispatch(tr.scrollIntoView());
       }
     });
     hideReplyDiv(true);
