@@ -1,6 +1,6 @@
 // /* eslint-disable */
 
-import {Plugin, PluginKey, Transaction} from 'prosemirror-state';
+import {Plugin, PluginKey} from 'prosemirror-state';
 import {Decoration, DecorationSet} from 'prosemirror-view';
 import {Schema} from 'prosemirror-model';
 import {CommentView} from './CommentView';
@@ -8,9 +8,8 @@ import CommentMarkSpec from './CommentMarkSpec';
 import './Comment.css';
 import '@modusoperandi/licit-ui-commands/dist/ui/czi-pop-up.css';
 import {applyEffectiveSchema} from './CommentSchema';
-import {COMMENT_KEY, MARK_TEXT_HIGHLIGHT} from './Constants';
+import {COMMENT_KEY} from './Constants';
 import {getCommentContainer} from './utils/document/DocumentHelpers';
-import {AddMarkStep, RemoveMarkStep} from 'prosemirror-transform';
 
 const commentPlugin = new PluginKey(COMMENT_KEY);
 const MARKTYPE = 'comment';
@@ -41,10 +40,10 @@ export class CommentPlugin extends Plugin {
           return this.getState(state);
         },
         handleDOMEvents: {
-          mouseover(view, event) {
+          mouseenter(view, event) {
             highLightComment(view, event, true, this.spec.commentView);
           },
-          mouseout(view, event) {
+          mouseleave(view, event) {
             highLightComment(view, event, false, this.spec.commentView);
           },
         },
@@ -64,26 +63,6 @@ export class CommentPlugin extends Plugin {
       marks: marks,
     });
   }
-}
-
-function isHighlightViaCollab(tr: Transaction) {
-  let viaCollab = false;
-  let isHighlight = false;
-
-  viaCollab = !!tr.getMeta('collab$');
-  if (viaCollab) {
-    const steps = tr.steps;
-    for (const step of steps) {
-      if (step instanceof AddMarkStep || step instanceof RemoveMarkStep) {
-        if (MARK_TEXT_HIGHLIGHT === step.mark.type.name) {
-          isHighlight = true;
-          break;
-        }
-      }
-    }
-  }
-
-  return isHighlight && viaCollab;
 }
 
 function validateSelection(state) {
