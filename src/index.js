@@ -1,6 +1,6 @@
 // /* eslint-disable */
 
-import {EditorState, Plugin, PluginKey, Transaction} from 'prosemirror-state';
+import {Plugin, PluginKey, Transaction} from 'prosemirror-state';
 import {Decoration, DecorationSet} from 'prosemirror-view';
 import {Schema} from 'prosemirror-model';
 import {CommentView} from './CommentView';
