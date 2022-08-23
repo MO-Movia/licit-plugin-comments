@@ -126,7 +126,7 @@ const CommentReply = (props) => {
       commentObj.attrs.conversation.push(obj);
     }
 
-    allCommentsWithSameId.forEach((singleComment) => {
+    allCommentsWithSameId.forEach((_singleComment) => {
       tr = tr.removeMark(
         commentObj.attrs.markFrom,
         commentObj.attrs.markTo,

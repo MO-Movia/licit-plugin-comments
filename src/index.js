@@ -1,6 +1,6 @@
 // /* eslint-disable */
 
-import {Plugin, PluginKey} from 'prosemirror-state';
+import {EditorState, Plugin, PluginKey, Transaction} from 'prosemirror-state';
 import {Decoration, DecorationSet} from 'prosemirror-view';
 import {Schema} from 'prosemirror-model';
 import {CommentView} from './CommentView';
@@ -8,8 +8,9 @@ import CommentMarkSpec from './CommentMarkSpec';
 import './Comment.css';
 import '@modusoperandi/licit-ui-commands/dist/ui/czi-pop-up.css';
 import {applyEffectiveSchema} from './CommentSchema';
-import {COMMENT_KEY} from './Constants';
+import {COMMENT_KEY, MARK_TEXT_HIGHLIGHT} from './Constants';
 import {getCommentContainer} from './utils/document/DocumentHelpers';
+import {AddMarkStep, RemoveMarkStep} from 'prosemirror-transform';
 
 const commentPlugin = new PluginKey(COMMENT_KEY);
 const MARKTYPE = 'comment';
@@ -19,7 +20,7 @@ export class CommentPlugin extends Plugin {
     super({
       key: commentPlugin,
       state: {
-        init(config, state) {
+        init(_config, state) {
           const {doc} = state;
           return commentDeco(doc, state);
         },
@@ -63,6 +64,26 @@ export class CommentPlugin extends Plugin {
       marks: marks,
     });
   }
+}
+
+function isHighlightViaCollab(tr: Transaction) {
+  let viaCollab = false;
+  let isHighlight = false;
+
+  viaCollab = !!tr.getMeta('collab$');
+  if (viaCollab) {
+    const steps = tr.steps;
+    for (const step of steps) {
+      if (step instanceof AddMarkStep || step instanceof RemoveMarkStep) {
+        if (MARK_TEXT_HIGHLIGHT === step.mark.type.name) {
+          isHighlight = true;
+          break;
+        }
+      }
+    }
+  }
+
+  return isHighlight && viaCollab;
 }
 
 function validateSelection(state) {
@@ -134,29 +155,23 @@ function highLightComment(view, e, highlight, commentView) {
 
 function showCommentHighlight(view, pos, highlight) {
   const parentNode = view.state.tr.doc.nodeAt(pos);
-  if (parentNode) {
-    if (parentNode.marks) {
-      let markFound;
-      const actualMark = parentNode.marks.find(
-        (mark) => mark.type.name === MARKTYPE
+  if (parentNode && parentNode.marks) {
+    let markFound;
+    const actualMark = parentNode.marks.find(
+      (mark) => mark.type.name === MARKTYPE
+    );
+    clearCommentHighlight(view);
+    if (actualMark) {
+      markFound = {
+        attrs: actualMark.attrs,
+      };
+      const commentDiv = getCommentContainer(view).querySelector(
+        '#comment' + markFound.attrs.conversation[0].timestamp
       );
-      if (actualMark) {
-        clearCommentHighlight(view);
-        markFound = {
-          attrs: actualMark.attrs,
-        };
-      } else {
-        clearCommentHighlight(view);
-      }
-      if (markFound) {
-        const commentDiv = getCommentContainer(view).querySelector(
-          '#comment' + markFound.attrs.conversation[0].timestamp
-        );
-        if (commentDiv) {
-          commentDiv.style.backgroundColor = highlight
-            ? '#e9d8d8'
-            : 'transparent';
-        }
+      if (commentDiv) {
+        commentDiv.style.backgroundColor = highlight
+          ? '#e9d8d8'
+          : 'transparent';
       }
     }
   } else {

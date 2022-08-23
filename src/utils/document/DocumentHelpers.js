@@ -1,4 +1,5 @@
-const MARK_TEXT_HIGHLIGHT = 'mark-text-highlight';
+import {MARK_TEXT_HIGHLIGHT} from '../../Constants';
+
 export const findAllMarksWithSameId = (state, mark) => {
   const type = mark.type.name;
   const markType = state.schema.marks[type];
@@ -6,13 +7,12 @@ export const findAllMarksWithSameId = (state, mark) => {
   const allNodes = findChildrenByMark(state.doc, markType, true);
 
   const allMarksWithSameId = [];
-  allNodes.map((node) => {
+  allNodes.forEach((node) => {
     node.node.marks.filter((value) => {
       if (mark.type.name === type && mark.attrs.id === value.attrs.id) {
         allMarksWithSameId.push(node);
       }
     });
-    return allMarksWithSameId;
   });
   return allMarksWithSameId;
 };
@@ -24,13 +24,12 @@ export const getAllMarksWithSameId = (state, mark) => {
   const allNodes = findChildrenByMark(state.doc, markType, true);
 
   const allMarksWithSameId = [];
-  allNodes.map((node) => {
+  allNodes.forEach((node) => {
     node.node.marks.filter((value) => {
       if (mark.type.name === type && mark.attrs.id === value.attrs.id) {
         allMarksWithSameId.push(mark);
       }
     });
-    return allMarksWithSameId;
   });
   return allMarksWithSameId;
 };
@@ -126,9 +125,10 @@ export const onClickWrapper = (
   showCommenthighlight
 ) => {
   const container = getCommentContainer(view);
-  if (null != container.querySelector('#commentUIDiv')) {
-    return;
-  } else if (onclick && null != container.querySelector('#editcomment' + id)) {
+  if (
+    null != container.querySelector('#commentUIDiv') ||
+    (onclick && null != container.querySelector('#editcomment' + id))
+  ) {
     return;
   }
   let {tr} = view.state;
