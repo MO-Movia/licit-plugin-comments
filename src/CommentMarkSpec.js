@@ -28,8 +28,8 @@ const CommentMarkSpec: MarkSpec = {
           group: dom.dataset.group,
           viewid: dom.dataset.viewid,
           conversation: JSON.parse(dom.dataset.conversation),
-          markFrom: dom.dataset.markFrom,
-          markTo: dom.dataset.markTo,
+          markFrom: dom.dataset.markfrom,
+          markTo: dom.dataset.markto,
           overridden: dom.dataset.overridden,
           appliedHighlight: dom.dataset.appliedHighlight,
         };

@@ -1,15 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import DateParser from './DateParser';
 import styled from 'styled-components';
 import CommentReply from './CommentReply';
-import { getAllMarksWithSameId, onClickWrapper } from './utils/document/DocumentHelpers';
+import {
+  getAllMarksWithSameId,
+  getCommentContainer,
+  onClickWrapper,
+} from './utils/document/DocumentHelpers';
 let counter = 0;
 let prevPos = 0;
 
 const Wrapper = styled.div`
-  padding: 3px 13px;  
-  BACKGROUND: #F1F5FF;
+  padding: 3px 13px;
+  background: #f1f5ff;
   box-sizing: border-box;
   border: 1px solid #e1ebff;
   border-radius: 3px;
@@ -23,29 +27,31 @@ const Wrapper = styled.div`
   }
 `;
 const StyledReply = styled(CommentReply)`
-  border-top: ${props => !props.isNewComment && '3px solid #E1EBFF'};
+  border-top: ${(props) => !props.isNewComment && '3px solid #E1EBFF'};
 `;
 
-const CommentItemList = props => {
-  const { active, className, view } = props;
+const CommentItemList = (props) => {
+  const {active, className, view, state} = props;
   const [isActive, setActive] = useState(0);
   const [editedComment, setEditedComment] = useState('');
   const [selected, setSelected] = useState(0);
 
   useEffect(() => {
+    // This is intentional
   }, [selected]);
 
   const getCommentMarkList = () => {
     const commentTracks = [];
     counter = 0;
     prevPos = 0;
-    view.state.tr.doc.descendants((node, pos) => {
+    state.tr.doc.descendants((node, _pos) => {
       if (node.marks && 0 < node.marks.length) {
         node.marks.some((mark) => {
-          if ('comment' === mark.type.name && !(commentTracks.some(e => e.attrs.id === mark.attrs.id))) {
-            commentTracks.push(
-              mark,
-            );
+          if (
+            'comment' === mark.type.name &&
+            !commentTracks.some((e) => e.attrs.id === mark.attrs.id)
+          ) {
+            commentTracks.push(mark);
           }
         });
       }
@@ -70,7 +76,7 @@ const CommentItemList = props => {
   };
 
   const removeCommentMark = (tr, commentTrack) => {
-    const commentMark = view.state.schema.marks.comment;
+    const commentMark = state.schema.marks.comment;
     const commentnodePos = getCommentWordPos(tr, commentTrack.attrs.id);
     const node = tr.doc.nodeAt(commentnodePos);
     if (node) {
@@ -81,16 +87,22 @@ const CommentItemList = props => {
   };
 
   const onResolveComment = (commentTrack) => {
-    const { tr } = view.state;
+    const {tr} = state;
     const trans = removeCommentMark(tr, commentTrack);
 
     if (view.dispatch) {
-      view.dispatch(trans);
+      view.dispatch(trans.scrollIntoView());
     }
   };
 
+  const wrapNumberID = (id) => {
+    return "[id='" + id + "']";
+  };
+
   const onReplyComment = (commentTrack) => {
-    const replyDiv = document.getElementById('reply' + commentTrack.attrs.id);
+    const replyDiv = getCommentContainer(view).querySelector(
+      wrapNumberID('reply' + commentTrack.attrs.id)
+    );
     if (commentTrack && replyDiv) {
       replyDiv.style.display = 'block';
     }
@@ -104,30 +116,30 @@ const CommentItemList = props => {
     e.stopPropagation();
     e.preventDefault();
 
-    let {
-      tr
-    } = view.state;
+    let {tr} = state;
     setSelected(0);
-    const markType = view.state.schema.marks.comment;
+    const markType = state.schema.marks.comment;
     let allCommentsWithSameId = [];
     if (view) {
-      allCommentsWithSameId = getAllMarksWithSameId(
-        view.state,
-        commentTrack,
-      );
-      allCommentsWithSameId.forEach(eachComment => {
-        eachComment.attrs.conversation.forEach(comment => {
+      allCommentsWithSameId = getAllMarksWithSameId(state, commentTrack);
+      allCommentsWithSameId.forEach((eachComment) => {
+        eachComment.attrs.conversation.forEach((comment) => {
           if (comment.timestamp === item.timestamp) {
             comment.comment = editedComment ? editedComment : item.comment;
-            tr = tr.removeMark(eachComment.attrs.markFrom, eachComment.attrs.markTo, markType);
-            tr = tr.addMark(eachComment.attrs.markFrom, eachComment.attrs.markTo,
-              markType.create(
-                eachComment.attrs
-              ));
+            tr = tr.removeMark(
+              eachComment.attrs.markFrom,
+              eachComment.attrs.markTo,
+              markType
+            );
+            tr = tr.addMark(
+              eachComment.attrs.markFrom,
+              eachComment.attrs.markTo,
+              markType.create(eachComment.attrs)
+            );
           }
         });
         if (view.dispatch) {
-          view.dispatch(tr);
+          view.dispatch(tr.scrollIntoView());
         }
       });
     }
@@ -136,7 +148,7 @@ const CommentItemList = props => {
   };
 
   const hideEditButtons = (item) => {
-    const editDiv = document.getElementById('editbuttons');
+    const editDiv = getCommentContainer(view).querySelector('#editbuttons');
     if (editDiv) {
       editDiv.style.display = 'none';
     }
@@ -155,7 +167,9 @@ const CommentItemList = props => {
   };
 
   const applyBorderColor = (commentTrack) => {
-    const editDiv = document.getElementById(commentTrack.attrs.id);
+    const editDiv = getCommentContainer(view).querySelector(
+      wrapNumberID(commentTrack.attrs.id)
+    );
     if (editDiv) {
       editDiv.style.borderColor = 'red';
       editDiv.style.borderRightColor = 'transparent';
@@ -163,8 +177,10 @@ const CommentItemList = props => {
   };
 
   const isEditMode = (id) => {
-    const editComment = document.getElementById('editcomment' + id);
-    return editComment ? true : false;
+    const container = getCommentContainer(view).querySelector(
+      '#editcomment' + id
+    );
+    return container ? true : false;
   };
 
   const toggleClass = (id, commentTrack) => {
@@ -175,14 +191,20 @@ const CommentItemList = props => {
   };
 
   const showReplyButton = (id, show) => {
-    const buttondiv = document.getElementById('btnreplyresolve' + id);
-    if (buttondiv) {
-      buttondiv.style.display = show ? 'flex' : 'none';
+    const editorDiv = getCommentContainer(view);
+    if (editorDiv) {
+      const buttonDiv = editorDiv.querySelector('#btnreplyresolve' + id);
+      if (buttonDiv) {
+        buttonDiv.style.display = show ? 'flex' : 'none';
+      }
     }
   };
 
   const cancel = (e, item) => {
-    if (null === e.relatedTarget || (e.relatedTarget&& 'postcommentt' !== e.relatedTarget.id)) {
+    if (
+      null === e.relatedTarget ||
+      (e.relatedTarget && 'postcommentt' !== e.relatedTarget.id)
+    ) {
       // [FS] IRAD-1743 24-03-2022
       // Don't further propogate and avoid default.
       e.stopPropagation();
@@ -191,58 +213,86 @@ const CommentItemList = props => {
       setActive(item.timestamp);
       hideEditButtons(item);
     }
-
   };
 
   function renderEditview(item, commentTrack) {
-    return <div>
-      <form>
-        <textarea defaultValue={item.comment} id={'editcomment' + item.timestamp}
-          onBlur={(e) => cancel(e, item)}
-          onChange={setComment.bind(this)}
-          onMouseOver={() => onClickWrapper(item.timestamp, view, commentTrack, false, true)}
+    return (
+      <div>
+        <form>
+          <textarea
+            defaultValue={item.comment}
+            id={'editcomment' + item.timestamp}
+            onBlur={(e) => cancel(e, item)}
+            onChange={setComment.bind(this)}
+            onMouseOver={() =>
+              onClickWrapper(item.timestamp, view, commentTrack, false, true)
+            }
+            style={{
+              borderColor: 'transparent',
+              fontFamily: 'sans-serif',
+              fontSize: '13px',
+              marginTop: '-12px',
+              maxWidth: '220px',
+              minHeight: '40px',
+              overflowWrap: 'break-word',
+              resize: 'none',
+              width: '100%',
+              wordBreak: 'break-all',
+            }}
+          ></textarea>
+        </form>
+        <div
+          id={'editbuttons'}
           style={{
-            borderColor: 'transparent',
-            fontFamily: 'sans-serif',
-            fontSize: '13px', marginTop: '-12px', maxWidth: '220px', minHeight: '40px',
-            overflowWrap: 'break-word',
-            resize: 'none',
-            width: '100%',
-            wordBreak: 'break-all',
-          }}></textarea>
-      </form>
-      <div id={'editbuttons'} style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
-        <button id={'postcommentt'}
-          onClick={(e) => editComment(e, item, commentTrack)}
-          style={{
-            backgroundColor: '#E0E2E7', border: '0',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            color: '#686363',
-            marginRight: '8px'
-          }} type='button'>
-          Post
-        </button>
-        <button onClick={(e) => cancel(e, item)} style={{
-          backgroundColor: '#E0E2E7', border: '0',
-          borderRadius: '5px',
-          cursor: 'pointer',
-          color: '#686363',
-          marginRight: '8px'
-        }}>
-          Cancel
-        </button>
+            display: 'flex',
+            justifyContent: 'flex-end',
+            marginTop: '4px',
+          }}
+        >
+          <button
+            id={'postcommentt'}
+            onClick={(e) => editComment(e, item, commentTrack)}
+            style={{
+              backgroundColor: '#E0E2E7',
+              border: '0',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              color: '#686363',
+              marginRight: '8px',
+            }}
+            type="button"
+          >
+            Post
+          </button>
+          <button
+            onClick={(e) => cancel(e, item)}
+            style={{
+              backgroundColor: '#E0E2E7',
+              border: '0',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              color: '#686363',
+              marginRight: '8px',
+            }}
+          >
+            Cancel
+          </button>
+        </div>
       </div>
-    </div>;
-  };
+    );
+  }
 
   function renderDefaultview(item) {
-    if (item.timestamp === selected) { return null; }
+    if (item.timestamp === selected) {
+      return null;
+    }
     return <div className={'commentt' + item.timestamp}> {item.comment}</div>;
   }
   const onmouseoutt = (id, commentTrack) => {
     if (isActive == id && 0 === selected) setActive(0);
-    const editDiv = document.getElementById(commentTrack.attrs.id);
+    const editDiv = getCommentContainer(view).querySelector(
+      wrapNumberID(commentTrack.attrs.id)
+    );
     if (editDiv) {
       editDiv.style.borderColor = 'transparent';
     }
@@ -253,16 +303,13 @@ const CommentItemList = props => {
     <>
       {getCommentMarkList().map((commentTrack, index) => {
         if (commentTrack.type && commentTrack.type.name === 'comment') {
-          let pos = view.domAtPos(commentTrack.attrs.markTo).node.parentNode.offsetTop;
+          let pos = view.domAtPos(commentTrack.attrs.markTo).node.parentNode
+            .offsetTop;
           if (prevPos === pos) {
-            // pos = pos + 42;
-            // counter = counter - 1;
-            // if (counter === 1) {
-            //   pos = pos - (counter * 42);
-            // }
+            // This is intentional
           }
           if (counter > 1) {
-            pos = pos - (counter * 42);
+            pos = pos - counter * 42;
             if (prevPos > pos) {
               pos = prevPos;
             }
@@ -270,34 +317,70 @@ const CommentItemList = props => {
           prevPos = pos;
           const topPosition = pos + 'px';
           return (
-            <Wrapper active={active} className={className} id={commentTrack.attrs.id} key={commentTrack.attrs.id}
+            <Wrapper
+              active={active}
+              className={className}
+              id={commentTrack.attrs.id}
+              key={commentTrack.attrs.id}
               onMouseLeave={() => showReplyButton(commentTrack.attrs.id, false)}
               onMouseOver={() => showReplyButton(commentTrack.attrs.id, true)}
               style={{
                 position: 'relative',
-                top: topPosition
-              }}>
-
-              <ul style={{ listStyleType: 'none', marginBottom: '4px', paddingLeft: '0' }} >
+                top: topPosition,
+              }}
+            >
+              <ul
+                style={{
+                  listStyleType: 'none',
+                  marginBottom: '4px',
+                  paddingLeft: '0',
+                }}
+              >
                 {commentTrack.attrs.conversation.map((item, i) => (
-                  <li id={'comment' + item.timestamp} key={'comment' + item.timestamp}
-                    onClick={onClickWrapper.bind(this, item.timestamp, view, commentTrack, true, true)}
+                  <li
+                    id={'comment' + item.timestamp}
+                    key={'comment' + item.timestamp}
+                    onClick={onClickWrapper.bind(
+                      this,
+                      item.timestamp,
+                      view,
+                      commentTrack,
+                      true,
+                      true
+                    )}
                     style={{
                       minHeight: '35px',
                       paddingBottom: '10px',
                     }}
                   >
-                    <div className={isActive == item.timestamp ? 'r-collapse' : 'rcc-collapse'} key={'commentt' + item.timestamp}
+                    <div
+                      className={
+                        isActive == item.timestamp
+                          ? 'r-collapse'
+                          : 'rcc-collapse'
+                      }
+                      key={'commentt' + item.timestamp}
                       onClick={() => toggleFunc(item, commentTrack)}
-                      onMouseLeave={() => onmouseoutt(item.timestamp, commentTrack)}
-                      onMouseOver={() => toggleClass(item.timestamp, commentTrack)}
+                      onMouseLeave={() =>
+                        onmouseoutt(item.timestamp, commentTrack)
+                      }
+                      onMouseOver={() =>
+                        toggleClass(item.timestamp, commentTrack)
+                      }
                     >
-                      {/* {renderDefaultview(item)} */}
-                      {selected == item.timestamp ? renderEditview(item, commentTrack) : renderDefaultview(item)}
-
-
+                      {selected == item.timestamp
+                        ? renderEditview(item, commentTrack)
+                        : renderDefaultview(item)}
                     </div>
-                    <div style={{ fontFamily: 'Fira Sans Condensed', fontSize: '13px', fontStyle: 'italic', color: '#7c7878', cursor: 'default' }}>
+                    <div
+                      style={{
+                        fontFamily: 'Fira Sans Condensed',
+                        fontSize: '13px',
+                        fontStyle: 'italic',
+                        color: '#7c7878',
+                        cursor: 'default',
+                      }}
+                    >
                       <DateParser timestamp={item.timestamp}>
                         {(timeStamp, timeAgo) => {
                           return `${timeAgo} ago`;
@@ -306,7 +389,10 @@ const CommentItemList = props => {
                     </div>
                   </li>
                 ))}
-                <div id={'reply' + commentTrack.attrs.id} style={{ display: 'none' }}>
+                <div
+                  id={'reply' + commentTrack.attrs.id}
+                  style={{display: 'none'}}
+                >
                   <StyledReply
                     commentObj={commentTrack}
                     isNewComment={commentTrack.attrs.conversation.length === 0}
@@ -314,24 +400,37 @@ const CommentItemList = props => {
                   />
                 </div>
               </ul>
-              <div id={'btnreplyresolve' + commentTrack.attrs.id} style={{ display: 'none', justifyContent: 'flex-end', marginBottom: '2px' }}>
-                <button id={'btnreply'} onClick={onReplyComment.bind(this, commentTrack)}
+              <div
+                id={'btnreplyresolve' + commentTrack.attrs.id}
+                style={{
+                  display: 'none',
+                  justifyContent: 'flex-end',
+                  marginBottom: '2px',
+                }}
+              >
+                <button
+                  id={'btnreply'}
+                  onClick={onReplyComment.bind(this, commentTrack)}
                   style={{
                     background: 'none',
                     border: 'none',
                     color: '#0042c7',
                     cursor: 'pointer',
                     marginLeft: '167px',
-                  }}>
+                  }}
+                >
                   Reply
                 </button>
-                <button id={'btnresolve'} onClick={onResolveComment.bind(this, commentTrack)}
+                <button
+                  id={'btnresolve'}
+                  onClick={onResolveComment.bind(this, commentTrack)}
                   style={{
                     background: 'none',
                     border: 'none',
                     color: '#0042c7',
                     cursor: 'pointer',
-                  }}>
+                  }}
+                >
                   Resolve
                 </button>
               </div>
@@ -355,7 +454,7 @@ CommentItemList.propTypes = {
       content: PropTypes.string.isRequired,
       displayName: PropTypes.string.isRequired,
       timestamp: PropTypes.number.isRequired,
-    }),
+    })
   ),
 };
 

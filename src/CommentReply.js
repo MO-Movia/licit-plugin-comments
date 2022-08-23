@@ -1,9 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import PropTypes from 'prop-types';
-import styled, { css } from 'styled-components';
-import { grid, th } from '@pubsweet/ui-toolkit';
-import { v4 as uuidv4 } from 'uuid';
-import {findAllMarksWithSameId} from './utils/document/DocumentHelpers';
+import styled, {css} from 'styled-components';
+import {grid, th} from '@pubsweet/ui-toolkit';
+import {v4 as uuidv4} from 'uuid';
+import {
+  findAllMarksWithSameId,
+  getCommentContainer,
+} from './utils/document/DocumentHelpers';
 
 const Wrapper = styled.div`
   background: ${th('colorBackgroundHue')};
@@ -46,8 +49,8 @@ const Button = styled.button`
   color: gray;
   padding: ${grid(2)} ${grid(4)};
 
-  ${props => props.primary && primary}
-  ${props => props.disabled && 'cursor: not-allowed;'}
+  ${(props) => props.primary && primary}
+  ${(props) => props.disabled && 'cursor: not-allowed;'}
 `;
 
 const ButtonGroup = styled.div`
@@ -56,8 +59,8 @@ const ButtonGroup = styled.div`
   }
 `;
 
-const CommentReply = props => {
-  const { className, isNewComment, view, commentObj } = props;
+const CommentReply = (props) => {
+  const {className, isNewComment, view, commentObj} = props;
   const commentInput = useRef(null);
   const [commentValue, setCommentValue] = useState('');
 
@@ -67,7 +70,7 @@ const CommentReply = props => {
     });
   }, []);
 
-  const handleSubmit = e => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     e.stopPropagation();
     onClickPost(commentValue);
@@ -75,21 +78,23 @@ const CommentReply = props => {
   };
 
   const hideReplyDiv = (hideDiv) => {
-    const replyDiv = document.getElementById('reply' + commentObj.attrs.id);
+    const replyDiv = getCommentContainer(view).querySelector(
+      '#reply' + commentObj.attrs.id
+    );
     if (replyDiv) {
       replyDiv.style.display = hideDiv ? 'none' : 'block';
     }
   };
 
-  const resetValue = e => {
+  const resetValue = (e) => {
     hideReplyDiv(true);
   };
 
   const onClickPost = (comment): void => {
-    let { tr } = view.state;
-    const { selection } = view.state;
-    let { from, to } = selection;
-    const { empty } = selection;
+    let {tr} = view.state;
+    const {selection} = view.state;
+    let {from, to} = selection;
+    const {empty} = selection;
     const id = uuidv4();
     const markType = view.state.schema.marks.comment;
 
@@ -101,10 +106,7 @@ const CommentReply = props => {
     }
 
     if (view) {
-      allCommentsWithSameId = findAllMarksWithSameId(
-        view.state,
-        commentObj,
-      );
+      allCommentsWithSameId = findAllMarksWithSameId(view.state, commentObj);
     }
 
     const obj = {
@@ -117,39 +119,42 @@ const CommentReply = props => {
         conversation: [],
         id: id,
         markFrom: from,
-        markTo: to
+        markTo: to,
       };
       attrs.conversation.push(obj);
-    }
-    else {
+    } else {
       commentObj.attrs.conversation.push(obj);
     }
 
-    allCommentsWithSameId.forEach(singleComment => {
-      tr = tr.removeMark(commentObj.attrs.markFrom, commentObj.attrs.markTo, markType);
-      tr = tr.addMark((commentObj && commentObj.attrs) ? commentObj.attrs.markFrom : from, (commentObj && commentObj.attrs) ? commentObj.attrs.markTo : to,
-        markType.create(
-          commentObj.attrs
-         ));
+    allCommentsWithSameId.forEach((_singleComment) => {
+      tr = tr.removeMark(
+        commentObj.attrs.markFrom,
+        commentObj.attrs.markTo,
+        markType
+      );
+      tr = tr.addMark(
+        commentObj && commentObj.attrs ? commentObj.attrs.markFrom : from,
+        commentObj && commentObj.attrs ? commentObj.attrs.markTo : to,
+        markType.create(commentObj.attrs)
+      );
       if (view.dispatch) {
-        view.dispatch(tr);
+        view.dispatch(tr.scrollIntoView());
       }
     });
     hideReplyDiv(true);
   };
-
 
   return (
     <Wrapper className={className}>
       <form onSubmit={handleSubmit}>
         <TextWrapper id={'txtComment'}>
           <ReplyTextArea
-          autoFocus
-          cols='5'
-          id={'txtComment'}
+            autoFocus
+            cols="5"
+            id={'txtComment'}
             // onBlur={() => onBlur(commentInput.current.value)}
-          onChange={() => setCommentValue(commentInput.current.value)}
-          onKeyDown={e => {
+            onChange={() => setCommentValue(commentInput.current.value)}
+            onKeyDown={(e) => {
               if (e.keyCode === 13 && !e.shiftKey) {
                 e.preventDefault();
                 if (commentValue) handleSubmit(e);
@@ -157,14 +162,20 @@ const CommentReply = props => {
             }}
             placeholder={isNewComment ? 'Write comment...' : 'Reply...'}
             ref={commentInput}
-            rows='3'
+            rows="3"
             value={commentValue}
           />
         </TextWrapper>
 
         <ActionWrapper>
           <ButtonGroup>
-            <Button disabled={commentValue.length === 0} id={'btnPost'}  primary style={{ backgroundColor: '#707581' }} type="submit">
+            <Button
+              disabled={commentValue.length === 0}
+              id={'btnPost'}
+              primary
+              style={{backgroundColor: '#707581'}}
+              type="submit"
+            >
               Post
             </Button>
 
