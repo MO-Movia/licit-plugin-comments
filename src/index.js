@@ -1,6 +1,6 @@
 // /* eslint-disable */
 
-import {Plugin, PluginKey} from 'prosemirror-state';
+import {EditorState, Plugin, PluginKey, Transaction} from 'prosemirror-state';
 import {Decoration, DecorationSet} from 'prosemirror-view';
 import {Schema} from 'prosemirror-model';
 import {CommentView} from './CommentView';
@@ -9,7 +9,10 @@ import './Comment.css';
 import '@modusoperandi/licit-ui-commands/dist/ui/czi-pop-up.css';
 import {applyEffectiveSchema} from './CommentSchema';
 import {COMMENT_KEY} from './Constants';
-import {getCommentContainer} from './utils/document/DocumentHelpers';
+import {
+  getCommentContainer,
+  HIGHLIGHTDECO,
+} from './utils/document/DocumentHelpers';
 
 const commentPlugin = new PluginKey(COMMENT_KEY);
 const MARKTYPE = 'comment';
@@ -27,7 +30,7 @@ export class CommentPlugin extends Plugin {
           if (this.spec.commentView) {
             this.spec.commentView.showCommentList(newState);
           }
-          return commentDeco(tr.doc, newState, this.spec.commentView);
+          return commentDeco(tr.doc, newState, this.spec.commentView, tr);
         },
       },
       view(editorView) {
@@ -48,6 +51,10 @@ export class CommentPlugin extends Plugin {
           },
         },
       },
+      filterTransaction(tr: Transaction, _state: EditorState): boolean {
+        // skip if the highlight thru collab
+        return !isHighlightViaCollab(tr);
+      },
     });
   }
 
@@ -63,6 +70,18 @@ export class CommentPlugin extends Plugin {
       marks: marks,
     });
   }
+}
+
+function isHighlightViaCollab(tr: Transaction) {
+  let viaCollab = false;
+  let isHighlight = false;
+
+  viaCollab = !!tr.getMeta('collab$');
+  if (viaCollab) {
+    isHighlight = !!tr.getMeta(HIGHLIGHTDECO);
+  }
+
+  return isHighlight && viaCollab;
 }
 
 function validateSelection(state) {
@@ -91,7 +110,7 @@ function validateSelection(state) {
   return showCommentIcon;
 }
 
-function commentDeco(doc, state, commentView) {
+function commentDeco(doc, state, commentView, tr) {
   if (!validateSelection(state)) {
     return null;
   }
@@ -105,6 +124,14 @@ function commentDeco(doc, state, commentView) {
       commentIcon(state.selection.empty, state, commentView)
     )
   );
+
+  if (tr) {
+    const d = tr.getMeta(HIGHLIGHTDECO);
+
+    if (d) {
+      decos.push(d);
+    }
+  }
   return DecorationSet.create(doc, decos);
 }
 
