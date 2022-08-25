@@ -43,10 +43,10 @@ export class CommentPlugin extends Plugin {
           return this.getState(state);
         },
         handleDOMEvents: {
-          mouseenter(view, event) {
+          mouseover(view, event) {
             highLightComment(view, event, true, this.spec.commentView);
           },
-          mouseleave(view, event) {
+          mouseout(view, event) {
             highLightComment(view, event, false, this.spec.commentView);
           },
         },
@@ -111,19 +111,18 @@ function validateSelection(state) {
 }
 
 function commentDeco(doc, state, commentView, tr) {
-  if (!validateSelection(state)) {
-    return null;
-  }
   const decos = [];
-  decos.push(
-    Decoration.inline(state.selection.from, state.selection.to, {
-      class: 'problem',
-    }),
-    Decoration.widget(
-      state.selection.from,
-      commentIcon(state.selection.empty, state, commentView)
-    )
-  );
+  if (validateSelection(state)) {
+    decos.push(
+      Decoration.inline(state.selection.from, state.selection.to, {
+        class: 'problem',
+      }),
+      Decoration.widget(
+        state.selection.from,
+        commentIcon(state.selection.empty, state, commentView)
+      )
+    );
+  }
 
   if (tr) {
     const d = tr.getMeta(HIGHLIGHTDECO);
@@ -132,7 +131,7 @@ function commentDeco(doc, state, commentView, tr) {
       decos.push(d);
     }
   }
-  return DecorationSet.create(doc, decos);
+  return 0 < decos.length ? DecorationSet.create(doc, decos) : null;
 }
 
 function highLightComment(view, e, highlight, commentView) {
