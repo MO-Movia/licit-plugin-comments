@@ -125,7 +125,13 @@ function commentDeco(doc, state, commentView, tr) {
   }
 
   if (tr) {
-    const d = tr.getMeta(HIGHLIGHTDECO);
+    let d = tr.getMeta(HIGHLIGHTDECO);
+    if (!d) {
+      const t = tr.getMeta('appendedTransaction');
+      if (t) {
+        d = t.getMeta(HIGHLIGHTDECO);
+      }
+    }
 
     if (d) {
       decos.push(d);
