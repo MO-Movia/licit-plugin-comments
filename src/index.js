@@ -1,6 +1,6 @@
 // /* eslint-disable */
 
-import {Plugin, PluginKey} from 'prosemirror-state';
+import {EditorState, Plugin, PluginKey, Transaction} from 'prosemirror-state';
 import {Decoration, DecorationSet} from 'prosemirror-view';
 import {Schema} from 'prosemirror-model';
 import {CommentView} from './CommentView';
@@ -9,7 +9,10 @@ import './Comment.css';
 import '@modusoperandi/licit-ui-commands/dist/ui/czi-pop-up.css';
 import {applyEffectiveSchema} from './CommentSchema';
 import {COMMENT_KEY} from './Constants';
-import {getCommentContainer} from './utils/document/DocumentHelpers';
+import {
+  getCommentContainer,
+  HIGHLIGHTDECO,
+} from './utils/document/DocumentHelpers';
 
 const commentPlugin = new PluginKey(COMMENT_KEY);
 const MARKTYPE = 'comment';
@@ -27,7 +30,7 @@ export class CommentPlugin extends Plugin {
           if (this.spec.commentView) {
             this.spec.commentView.showCommentList(newState);
           }
-          return commentDeco(tr.doc, newState, this.spec.commentView);
+          return commentDeco(tr.doc, newState, this.spec.commentView, tr);
         },
       },
       view(editorView) {
@@ -40,13 +43,17 @@ export class CommentPlugin extends Plugin {
           return this.getState(state);
         },
         handleDOMEvents: {
-          mouseenter(view, event) {
+          mouseover(view, event) {
             highLightComment(view, event, true, this.spec.commentView);
           },
-          mouseleave(view, event) {
+          mouseout(view, event) {
             highLightComment(view, event, false, this.spec.commentView);
           },
         },
+      },
+      filterTransaction(tr: Transaction, _state: EditorState): boolean {
+        // skip if the highlight thru collab
+        return !isHighlightViaCollab(tr);
       },
     });
   }
@@ -63,6 +70,18 @@ export class CommentPlugin extends Plugin {
       marks: marks,
     });
   }
+}
+
+function isHighlightViaCollab(tr: Transaction) {
+  let viaCollab = false;
+  let isHighlight = false;
+
+  viaCollab = !!tr.getMeta('collab$');
+  if (viaCollab) {
+    isHighlight = !!tr.getMeta(HIGHLIGHTDECO);
+  }
+
+  return isHighlight && viaCollab;
 }
 
 function validateSelection(state) {
@@ -91,21 +110,34 @@ function validateSelection(state) {
   return showCommentIcon;
 }
 
-function commentDeco(doc, state, commentView) {
-  if (!validateSelection(state)) {
-    return null;
-  }
+function commentDeco(doc, state, commentView, tr) {
   const decos = [];
-  decos.push(
-    Decoration.inline(state.selection.from, state.selection.to, {
-      class: 'problem',
-    }),
-    Decoration.widget(
-      state.selection.from,
-      commentIcon(state.selection.empty, state, commentView)
-    )
-  );
-  return DecorationSet.create(doc, decos);
+  if (validateSelection(state)) {
+    decos.push(
+      Decoration.inline(state.selection.from, state.selection.to, {
+        class: 'problem',
+      }),
+      Decoration.widget(
+        state.selection.from,
+        commentIcon(state.selection.empty, state, commentView)
+      )
+    );
+  }
+
+  if (tr) {
+    let d = tr.getMeta(HIGHLIGHTDECO);
+    if (!d) {
+      const t = tr.getMeta('appendedTransaction');
+      if (t) {
+        d = t.getMeta(HIGHLIGHTDECO);
+      }
+    }
+
+    if (d) {
+      decos.push(d);
+    }
+  }
+  return 0 < decos.length ? DecorationSet.create(doc, decos) : null;
 }
 
 function highLightComment(view, e, highlight, commentView) {

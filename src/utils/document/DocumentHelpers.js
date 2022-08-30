@@ -1,4 +1,7 @@
+import {Decoration} from 'prosemirror-view';
 import {MARK_TEXT_HIGHLIGHT} from '../../Constants';
+
+export const HIGHLIGHTDECO = 'highLightDecoration';
 
 export const findAllMarksWithSameId = (state, mark) => {
   const type = mark.type.name;
@@ -41,10 +44,7 @@ export const flatten = (node, descend = true) => {
   const result = [];
   node.descendants((child, pos) => {
     result.push({node: child, pos});
-    if (!descend) {
-      return false;
-    }
-    return true;
+    return descend;
   });
   return result;
 };
@@ -131,26 +131,22 @@ export const onClickWrapper = (
   ) {
     return;
   }
-  let {tr} = view.state;
-  const commentnodePos = getCommentWordPos(tr, commentTrack.attrs.id);
-  const node = tr.doc.nodeAt(commentnodePos);
+  const {tr} = view.state;
+  const from = getCommentWordPos(tr, commentTrack.attrs.id);
+  const node = tr.doc.nodeAt(from);
   if (node) {
-    const commentTo = commentnodePos + node.nodeSize;
-    const attrs = {
-      highlightColor: selectTheHighlightColor(
-        showCommenthighlight,
-        onclick,
-        commentTrack,
-        view
-      ),
-      hasComment: showCommenthighlight,
-    };
-    const highLightCommentMarkType =
-      view.state.schema.marks[MARK_TEXT_HIGHLIGHT];
-    tr = tr.addMark(
-      commentnodePos,
-      commentTo,
-      highLightCommentMarkType.create(attrs)
+    const to = from + node.nodeSize;
+    const highlightColor = selectTheHighlightColor(
+      showCommenthighlight,
+      onclick,
+      commentTrack,
+      view
+    );
+    tr.setMeta(
+      HIGHLIGHTDECO,
+      Decoration.inline(from, to, {
+        style: `background-color: ${highlightColor};`,
+      })
     );
     view.dispatch(tr.scrollIntoView());
   }
