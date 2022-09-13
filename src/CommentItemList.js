@@ -10,9 +10,10 @@ import {
 } from './utils/document/DocumentHelpers';
 let counter = 0;
 let prevPos = 0;
+let prevComment = null;
 
 const Wrapper = styled.div`
-  padding: 3px 13px;
+  padding: 3px 3px;
   background: #f1f5ff;
   box-sizing: border-box;
   border: 1px solid #e1ebff;
@@ -20,8 +21,6 @@ const Wrapper = styled.div`
   flex-direction: column;
   transition: box-shadow 0.2s;
   min-width: 196px;
-  margin-left: 12px;
-  margin-top: 8px;
   > div:not(:last-of-type) {
     margin-bottom: 16px;
   }
@@ -200,6 +199,34 @@ const CommentItemList = (props) => {
     }
   };
 
+  const bringToFront = (id) => {
+    const editorDiv = getCommentContainer(view);
+    if (editorDiv) {
+      const commentDiv = editorDiv.querySelector(wrapNumberID(id));
+      if (commentDiv) {
+        // reset other sibling comments' zIndex
+        const children = commentDiv.parentElement.children;
+        for (const element of children) {
+          element.style.zIndex = 'initial';
+        }
+        // to bring it to front
+        commentDiv.style.zIndex = 999;
+      }
+    }
+  };
+
+  const getCommentHeight = (id) => {
+    let height = 0;
+    const editorDiv = getCommentContainer(view);
+    if (editorDiv) {
+      const commentDiv = editorDiv.querySelector(wrapNumberID(id));
+      if (commentDiv) {
+        height = commentDiv.offsetHeight;
+      }
+    }
+    return height;
+  };
+
   const cancel = (e, item) => {
     if (
       null === e.relatedTarget ||
@@ -303,17 +330,16 @@ const CommentItemList = (props) => {
     <>
       {getCommentMarkList().map((commentTrack, index) => {
         if (commentTrack.type && commentTrack.type.name === 'comment') {
-          let pos = view.domAtPos(commentTrack.attrs.markTo).node.parentNode
-            .offsetTop;
-          if (prevPos === pos) {
-            // This is intentional
+          let node = view.domAtPos(commentTrack.attrs.markFrom).node;
+          let pos = node.offsetTop;
+          if (!pos) {
+            pos = node.parentNode.offsetTop;
           }
-          if (counter > 1) {
-            pos = pos - counter * 42;
-            if (prevPos > pos) {
-              pos = prevPos;
-            }
+          if (pos <= prevPos && prevComment) {
+            pos = prevPos + getCommentHeight(prevComment.attrs.id) + 3;
           }
+
+          prevComment = commentTrack;
           prevPos = pos;
           const topPosition = pos + 'px';
           return (
@@ -324,6 +350,7 @@ const CommentItemList = (props) => {
               key={commentTrack.attrs.id}
               onMouseLeave={() => showReplyButton(commentTrack.attrs.id, false)}
               onMouseOver={() => showReplyButton(commentTrack.attrs.id, true)}
+              onMouseDown={() => bringToFront(commentTrack.attrs.id)}
               style={{
                 position: 'relative',
                 top: topPosition,
