@@ -326,6 +326,9 @@ const CommentItemList = (props) => {
     onClickWrapper(id, view, commentTrack, false, false);
   };
 
+  prevComment = null;
+  prevPos = 0;
+
   return (
     <>
       {getCommentMarkList().map((commentTrack, index) => {
@@ -352,8 +355,9 @@ const CommentItemList = (props) => {
               onMouseOver={() => showReplyButton(commentTrack.attrs.id, true)}
               onMouseDown={() => bringToFront(commentTrack.attrs.id)}
               style={{
-                position: 'relative',
+                position: 'absolute',
                 top: topPosition,
+                width: 'inherit',
               }}
             >
               <ul

@@ -99,7 +99,10 @@ function validateSelection(state) {
       if (node) {
         if (
           (node.marks &&
-            node.marks.find((mark) => mark.type.name === 'link')) ||
+            node.marks.find(
+              (mark) =>
+                'link' === mark.type.name || 'comment' === mark.type.name
+            )) ||
           'math' === node.type.name
         ) {
           return false;
