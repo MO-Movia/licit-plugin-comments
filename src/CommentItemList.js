@@ -338,8 +338,8 @@ const CommentItemList = (props) => {
           if (!pos) {
             pos = node.parentNode.offsetTop;
           }
-          if (pos <= prevPos && prevComment) {
-            pos = prevPos + getCommentHeight(prevComment.attrs.id) + 3;
+          if ((pos <= prevPos && prevComment) || prevComment) {
+            pos = prevPos + getCommentHeight(prevComment.attrs.id) + 10;
           }
 
           prevComment = commentTrack;
@@ -379,9 +379,13 @@ const CommentItemList = (props) => {
                       true,
                       true
                     )}
-                    style={{
+                    style={i != 0 ? {
                       minHeight: '35px',
                       paddingBottom: '10px',
+                      paddingLeft: '20px',
+                    }:{
+                      minHeight: '35px',
+                      paddingBottom:'10px',
                     }}
                   >
                     <div
