@@ -206,6 +206,7 @@ function commentIcon(hideIcon, state, commentView) {
   icon.className = 'comment-icon';
   icon.style.visibility = hideIcon ? 'hidden' : 'visible';
   icon.style.marginLeft = '15px';
+  icon.style.marginRight = '23px';
 
   if (commentView) {
     const commentUIDiv = getCommentContainer(commentView.view).querySelector(

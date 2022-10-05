@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import DateParser from './DateParser';
 import styled from 'styled-components';
@@ -8,7 +8,6 @@ import {
   getCommentContainer,
   onClickWrapper,
 } from './utils/document/DocumentHelpers';
-let counter = 0;
 let prevPos = 0;
 let prevComment = null;
 
@@ -30,7 +29,7 @@ const StyledReply = styled(CommentReply)`
 `;
 
 const CommentItemList = (props) => {
-  const {active, className, view, state} = props;
+  const { active, className, view, state } = props;
   const [isActive, setActive] = useState(0);
   const [editedComment, setEditedComment] = useState('');
   const [selected, setSelected] = useState(0);
@@ -41,7 +40,6 @@ const CommentItemList = (props) => {
 
   const getCommentMarkList = () => {
     const commentTracks = [];
-    counter = 0;
     prevPos = 0;
     state.tr.doc.descendants((node, _pos) => {
       if (node.marks && 0 < node.marks.length) {
@@ -86,7 +84,7 @@ const CommentItemList = (props) => {
   };
 
   const onResolveComment = (commentTrack) => {
-    const {tr} = state;
+    const { tr } = state;
     const trans = removeCommentMark(tr, commentTrack);
 
     if (view.dispatch) {
@@ -115,7 +113,7 @@ const CommentItemList = (props) => {
     e.stopPropagation();
     e.preventDefault();
 
-    let {tr} = state;
+    let { tr } = state;
     setSelected(0);
     const markType = state.schema.marks.comment;
     let allCommentsWithSameId = [];
@@ -333,7 +331,7 @@ const CommentItemList = (props) => {
     <>
       {getCommentMarkList().map((commentTrack, index) => {
         if (commentTrack.type && commentTrack.type.name === 'comment') {
-          let node = view.domAtPos(commentTrack.attrs.markFrom).node;
+          const node = view.domAtPos(commentTrack.attrs.markFrom).node;
           let pos = node.offsetTop;
           if (!pos) {
             pos = node.parentNode.offsetTop;
@@ -351,9 +349,9 @@ const CommentItemList = (props) => {
               className={className}
               id={commentTrack.attrs.id}
               key={commentTrack.attrs.id}
+              onMouseDown={() => bringToFront(commentTrack.attrs.id)}
               onMouseLeave={() => showReplyButton(commentTrack.attrs.id, false)}
               onMouseOver={() => showReplyButton(commentTrack.attrs.id, true)}
-              onMouseDown={() => bringToFront(commentTrack.attrs.id)}
               style={{
                 position: 'absolute',
                 top: topPosition,
@@ -383,9 +381,9 @@ const CommentItemList = (props) => {
                       minHeight: '35px',
                       paddingBottom: '10px',
                       paddingLeft: '20px',
-                    }:{
+                    } : {
                       minHeight: '35px',
-                      paddingBottom:'10px',
+                      paddingBottom: '10px',
                     }}
                   >
                     <div
@@ -426,7 +424,7 @@ const CommentItemList = (props) => {
                 ))}
                 <div
                   id={'reply' + commentTrack.attrs.id}
-                  style={{display: 'none'}}
+                  style={{ display: 'none' }}
                 >
                   <StyledReply
                     commentObj={commentTrack}
