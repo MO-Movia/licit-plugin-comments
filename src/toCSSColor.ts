@@ -1,4 +1,4 @@
-// @flow
+
 
 import Color from 'color';
 
@@ -28,7 +28,7 @@ export function toCSSColor(source: string): string {
 
   if (source && RGBA_PATTERN.test(source)) {
     const color = Color(source);
-    if (color.valpha === 0) {
+    if (color.alpha() === 0) {
       ColorMaping[source] = RGBA_TRANSPARENT;
       return RGBA_TRANSPARENT;
     }

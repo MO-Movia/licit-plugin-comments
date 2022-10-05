@@ -1,7 +1,11 @@
-import type { MarkSpec } from './Types';
-import { Mark } from 'prosemirror-model';
 
-const commentMarkSpec: MarkSpec = {
+import type { MarkSpec } from './Types';
+
+type HookType ={
+  value,
+  attrs
+};
+const CommentMarkSpec: MarkSpec = {
   attrs: {
     class: { default: 'comment' },
     id: { default: '' },
@@ -11,7 +15,7 @@ const commentMarkSpec: MarkSpec = {
     markFrom: { default: null },
     markTo: { default: null },
     overridden: { default: true },
-    appliedHighlight: {
+    appliedHighlight:{
       default: 'transparent'
     }
   },
@@ -27,8 +31,8 @@ const commentMarkSpec: MarkSpec = {
           group: dom.dataset.group,
           viewid: dom.dataset.viewid,
           conversation: JSON.parse(dom.dataset.conversation),
-          markFrom: dom.dataset.markFrom,
-          markTo: dom.dataset.markTo,
+          markFrom: dom.dataset.markfrom,
+          markTo: dom.dataset.markto,
           overridden: dom.dataset.overridden,
           appliedHighlight: dom.dataset.appliedHighlight,
         };
@@ -36,8 +40,8 @@ const commentMarkSpec: MarkSpec = {
     },
   ],
 
-  toDOM(hook: Mark) {
-    return [
+  toDOM(hook:HookType) {
+    hook.value = [
       'span',
       {
         class: hook.attrs.class,
@@ -51,7 +55,8 @@ const commentMarkSpec: MarkSpec = {
         'data-appliedHighlight': hook.attrs.appliedHighlight,
       },
     ];
+return hook.value;
   },
 };
 
-export default commentMarkSpec;
+export default CommentMarkSpec;

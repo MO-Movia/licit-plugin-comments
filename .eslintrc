@@ -24,7 +24,6 @@
     "no-mixed-spaces-and-tabs": "error",
     "no-trailing-spaces": "error",
     "no-undef": "error",
-    "no-console": "on" ,
     "no-unused-expression": [
       true,
       "allow-fast-null-checks"
@@ -34,8 +33,7 @@
       {
         "vars": "all",
         "args": "none",
-        "ignoreRestSiblings": false,
-        "argsIgnorePattern": "^_"
+        "ignoreRestSiblings": false
       }
     ],
     "no-var": "error",

@@ -12,13 +12,13 @@ const NODE_ENV = process.env.NODE_ENV || 'production';
 var isDev = 'development' === NODE_ENV || 0;
 
 var options = {
-  mode: NODE_ENV,
+mode: NODE_ENV,
   entry: {
     index: path.join(__dirname, 'src', 'index.ts'),
   },
   output: {
     path: path.join(__dirname, 'bin'),
-    filename: '[name].bundle.js',
+    filename: '[name].bundle.js'
   },
   module: {
     rules: [
@@ -29,7 +29,14 @@ var options = {
       },
       {
         test: /\.css$/,
-        use: ['style-loader', 'css-loader'],
+        use: [
+          'style-loader',
+          'css-loader',
+        ],
+      },
+      {
+        test: /\.(jpe?g|png|gif|svg)$/i, 
+        loader: 'file-loader'
       },
     ],
   },
@@ -44,7 +51,7 @@ var options = {
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(NODE_ENV),
     }),
-    new WriteFilePlugin(),
+    new WriteFilePlugin()
   ],
 };
 
