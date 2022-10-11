@@ -86,7 +86,11 @@ const CommentReply = (props) => {
     }
   };
 
+<<<<<<< HEAD:src/CommentReply.tsx
   const resetValue = (_e) => {
+=======
+  const resetValue = (e) => {
+>>>>>>> main:src/CommentReply.js
     hideReplyDiv(true);
   };
 
