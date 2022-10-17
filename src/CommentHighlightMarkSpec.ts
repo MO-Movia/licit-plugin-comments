@@ -1,8 +1,3 @@
-
-<<<<<<< HEAD:src/CommentHighlightMarkSpec.ts
-
-=======
->>>>>>> main:src/CommentHighlightMarkSpec.js
 import {Node, DOMOutputSpec} from 'prosemirror-model';
 import type {KeyValuePair} from './Constants';
 import {isTransparent, toCSSColor} from './toCSSColor';
