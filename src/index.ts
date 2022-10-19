@@ -2,7 +2,7 @@
 
 import { EditorState, Plugin, PluginKey, Transaction } from 'prosemirror-state';
 import { Decoration, DecorationSet } from 'prosemirror-view';
-import { Schema } from 'prosemirror-model';
+import { Node, Schema } from 'prosemirror-model';
 import { CommentView } from './CommentView';
 import CommentMarkSpec from './CommentMarkSpec';
 import './Comment.css';
@@ -104,20 +104,25 @@ function validateSelection(state) {
     } else {
       const node = state.tr.doc.nodeAt(state.selection.from);
       if (node) {
-        if (
-          (node.marks &&
-            node.marks.find(
-              (mark) =>
-                'link' === mark.type.name || 'comment' === mark.type.name
-            )) ||
-          'math' === node.type.name
-        ) {
-          return false;
-        }
+        return hideCommentIcon(node);
       }
     }
   }
   return showCommentIcon;
+}
+
+function hideCommentIcon(node: Node) {
+  if (
+    (node.marks &&
+      node.marks.find(
+        (mark) =>
+          'link' === mark.type.name || 'comment' === mark.type.name
+      )) ||
+    'math' === node.type.name
+  ) {
+    return false;
+  }
+  return true;
 }
 
 function commentDeco(doc, state, commentView?, tr?) {

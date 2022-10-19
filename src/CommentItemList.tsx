@@ -1,9 +1,8 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import DateParser from './DateParser';
 import styled from 'styled-components';
 import CommentReply from './CommentReply';
-import propTypes from 'prop-types';
 import {
   getAllMarksWithSameId,
   getCommentContainer,
@@ -30,7 +29,7 @@ const StyledReply = styled(CommentReply)`
 `;
 
 const CommentItemList = (props) => {
-  const { className, view, state} = props;
+  const { className, view, state } = props;
   const [isActive, setActive] = useState(0);
   const [editedComment, setEditedComment] = useState('');
   const [selected, setSelected] = useState(0);
@@ -86,7 +85,7 @@ const CommentItemList = (props) => {
   };
 
   const onResolveComment = (commentTrack) => {
-    const {tr} = state;
+    const { tr } = state;
     const trans = removeCommentMark(tr, commentTrack);
 
     if (view.dispatch) {
@@ -115,7 +114,7 @@ const CommentItemList = (props) => {
     e.stopPropagation();
     e.preventDefault();
 
-    let {tr} = state;
+    let { tr } = state;
     setSelected(0);
     const markType = state.schema.marks.comment;
     let allCommentsWithSameId = [];
@@ -315,6 +314,18 @@ const CommentItemList = (props) => {
     }
     return <div className={'commentt' + item.timestamp}> {item.comment}</div>;
   }
+
+  function getPosition(node) {
+    let pos = node.offsetTop;
+    if (!pos) {
+      pos = node.parentNode.offsetTop;
+    }
+    if ((pos <= prevPos && prevComment) || prevComment) {
+      pos = prevPos + getCommentHeight(prevComment.attrs.id) + 10;
+    }
+    return pos;
+  }
+
   const onmouseoutt = (id, commentTrack) => {
     if (isActive == id && 0 === selected) setActive(0);
     const editDiv = getCommentContainer(view).querySelector(
@@ -332,19 +343,12 @@ const CommentItemList = (props) => {
       {getCommentMarkList().map((commentTrack, _index) => {
         if (commentTrack.type && commentTrack.type.name === 'comment') {
           const node = view.domAtPos(commentTrack.attrs.markFrom).node;
-          let pos = node.offsetTop;
-          if (!pos) {
-            pos = node.parentNode.offsetTop;
-          }
-          if ((pos <= prevPos && prevComment) || prevComment) {
-            pos = prevPos + getCommentHeight(prevComment.attrs.id) + 10;
-          }
+          const pos = getPosition(node);
           prevComment = commentTrack;
           prevPos = pos;
           const topPosition = pos + 'px';
           return (
             <Wrapper
-             // active={active}
               className={className}
               id={commentTrack.attrs.id}
               key={commentTrack.attrs.id}
@@ -380,9 +384,9 @@ const CommentItemList = (props) => {
                       minHeight: '35px',
                       paddingBottom: '10px',
                       paddingLeft: '20px',
-                    }:{
+                    } : {
                       minHeight: '35px',
-                      paddingBottom:'10px',
+                      paddingBottom: '10px',
                     }}
                   >
                     <div
@@ -414,7 +418,7 @@ const CommentItemList = (props) => {
                       }}
                     >
                       <DateParser timestamp={item.timestamp}>
-                        {( _timeStamp,timeAgo) => {
+                        {(_timeStamp, timeAgo) => {
                           return `${timeAgo} ago`;
                         }}
                       </DateParser>
@@ -424,7 +428,7 @@ const CommentItemList = (props) => {
                 ))}
                 <div
                   id={'reply' + commentTrack.attrs.id}
-                  style={{display: 'none'}}
+                  style={{ display: 'none' }}
                 >
                   <StyledReply
                     commentObj={commentTrack}
@@ -489,8 +493,8 @@ CommentItemList.propTypes = {
       timestamp: PropTypes.number.isRequired,
     })
   ),
-   state:propTypes.object,
-   view:propTypes.object
+  state: propTypes.object,
+  view: propTypes.object
 
 };
 
