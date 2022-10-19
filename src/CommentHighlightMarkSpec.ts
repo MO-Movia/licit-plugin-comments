@@ -1,5 +1,3 @@
-// @flow
-
 import {Node, DOMOutputSpec} from 'prosemirror-model';
 import type {KeyValuePair} from './Constants';
 import {isTransparent, toCSSColor} from './toCSSColor';
@@ -8,7 +6,7 @@ import {isTransparent, toCSSColor} from './toCSSColor';
 const HASCOMMENT = 'hasComment';
 
 type toDOMFn = (node: Node) => DOMOutputSpec;
-type getAttrsFn = (p: Node | string) => KeyValuePair;
+type getAttrsFn = (p: Node | string | HTMLElement) => KeyValuePair;
 
 function getAttrs(base: getAttrsFn, dom: HTMLElement) {
   const attrs = base(dom);

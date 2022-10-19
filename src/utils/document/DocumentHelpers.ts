@@ -114,6 +114,9 @@ const getAppliedCustomStyle = (commentTrack, editorView) => {
     ) {
       commentTrack.attrs.appliedHighlight = highlightMark.attrs.highlightColor;
     }
+    if (!highlightMark) {
+      commentTrack.attrs.appliedHighlight = 'transparent';
+    }
   }
 };
 
@@ -132,10 +135,10 @@ export const onClickWrapper = (
     return;
   }
   const {tr} = view.state;
-  const from = getCommentWordPos(tr, commentTrack.attrs.id);
+  const from =commentTrack.attrs.markFrom;
   const node = tr.doc.nodeAt(from);
   if (node) {
-    const to = from + node.nodeSize;
+    const to = commentTrack.attrs.markTo;
     const highlightColor = selectTheHighlightColor(
       showCommenthighlight,
       onclick,

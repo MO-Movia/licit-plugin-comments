@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import DateParser from './DateParser';
 import styled from 'styled-components';
@@ -8,11 +8,11 @@ import {
   getCommentContainer,
   onClickWrapper,
 } from './utils/document/DocumentHelpers';
-let counter = 0;
 let prevPos = 0;
+let prevComment = null;
 
 const Wrapper = styled.div`
-  padding: 3px 13px;
+  padding: 3px 3px;
   background: #f1f5ff;
   box-sizing: border-box;
   border: 1px solid #e1ebff;
@@ -20,8 +20,6 @@ const Wrapper = styled.div`
   flex-direction: column;
   transition: box-shadow 0.2s;
   min-width: 196px;
-  margin-left: 12px;
-  margin-top: 8px;
   > div:not(:last-of-type) {
     margin-bottom: 16px;
   }
@@ -31,7 +29,7 @@ const StyledReply = styled(CommentReply)`
 `;
 
 const CommentItemList = (props) => {
-  const {active, className, view, state} = props;
+  const { className, view, state } = props;
   const [isActive, setActive] = useState(0);
   const [editedComment, setEditedComment] = useState('');
   const [selected, setSelected] = useState(0);
@@ -42,7 +40,7 @@ const CommentItemList = (props) => {
 
   const getCommentMarkList = () => {
     const commentTracks = [];
-    counter = 0;
+
     prevPos = 0;
     state.tr.doc.descendants((node, _pos) => {
       if (node.marks && 0 < node.marks.length) {
@@ -87,7 +85,7 @@ const CommentItemList = (props) => {
   };
 
   const onResolveComment = (commentTrack) => {
-    const {tr} = state;
+    const { tr } = state;
     const trans = removeCommentMark(tr, commentTrack);
 
     if (view.dispatch) {
@@ -116,7 +114,7 @@ const CommentItemList = (props) => {
     e.stopPropagation();
     e.preventDefault();
 
-    let {tr} = state;
+    let { tr } = state;
     setSelected(0);
     const markType = state.schema.marks.comment;
     let allCommentsWithSameId = [];
@@ -198,6 +196,34 @@ const CommentItemList = (props) => {
         buttonDiv.style.display = show ? 'flex' : 'none';
       }
     }
+  };
+
+  const bringToFront = (id) => {
+    const editorDiv = getCommentContainer(view);
+    if (editorDiv) {
+      const commentDiv = editorDiv.querySelector(wrapNumberID(id));
+      if (commentDiv) {
+        // reset other sibling comments' zIndex
+        const children = commentDiv.parentElement.children;
+        for (const element of children) {
+          element.style.zIndex = 'initial';
+        }
+        // to bring it to front
+        commentDiv.style.zIndex = 999;
+      }
+    }
+  };
+
+  const getCommentHeight = (id) => {
+    let height = 0;
+    const editorDiv = getCommentContainer(view);
+    if (editorDiv) {
+      const commentDiv = editorDiv.querySelector(wrapNumberID(id));
+      if (commentDiv) {
+        height = commentDiv.offsetHeight;
+      }
+    }
+    return height;
   };
 
   const cancel = (e, item) => {
@@ -288,6 +314,18 @@ const CommentItemList = (props) => {
     }
     return <div className={'commentt' + item.timestamp}> {item.comment}</div>;
   }
+
+  function getPosition(node) {
+    let pos = node.offsetTop;
+    if (!pos) {
+      pos = node.parentNode.offsetTop;
+    }
+    if ((pos <= prevPos && prevComment) || prevComment) {
+      pos = prevPos + getCommentHeight(prevComment.attrs.id) + 10;
+    }
+    return pos;
+  }
+
   const onmouseoutt = (id, commentTrack) => {
     if (isActive == id && 0 === selected) setActive(0);
     const editDiv = getCommentContainer(view).querySelector(
@@ -298,35 +336,29 @@ const CommentItemList = (props) => {
     }
     onClickWrapper(id, view, commentTrack, false, false);
   };
-
+  prevComment = null;
+  prevPos = 0;
   return (
     <>
-      {getCommentMarkList().map((commentTrack, index) => {
+      {getCommentMarkList().map((commentTrack, _index) => {
         if (commentTrack.type && commentTrack.type.name === 'comment') {
-          let pos = view.domAtPos(commentTrack.attrs.markTo).node.parentNode
-            .offsetTop;
-          if (prevPos === pos) {
-            // This is intentional
-          }
-          if (counter > 1) {
-            pos = pos - counter * 42;
-            if (prevPos > pos) {
-              pos = prevPos;
-            }
-          }
+          const node = view.domAtPos(commentTrack.attrs.markFrom).node;
+          const pos = getPosition(node);
+          prevComment = commentTrack;
           prevPos = pos;
           const topPosition = pos + 'px';
           return (
             <Wrapper
-              active={active}
               className={className}
               id={commentTrack.attrs.id}
               key={commentTrack.attrs.id}
+              onMouseDown={() => bringToFront(commentTrack.attrs.id)}
               onMouseLeave={() => showReplyButton(commentTrack.attrs.id, false)}
               onMouseOver={() => showReplyButton(commentTrack.attrs.id, true)}
               style={{
-                position: 'relative',
+                position: 'absolute',
                 top: topPosition,
+                width: 'inherit',
               }}
             >
               <ul
@@ -348,7 +380,11 @@ const CommentItemList = (props) => {
                       true,
                       true
                     )}
-                    style={{
+                    style={i != 0 ? {
+                      minHeight: '35px',
+                      paddingBottom: '10px',
+                      paddingLeft: '20px',
+                    } : {
                       minHeight: '35px',
                       paddingBottom: '10px',
                     }}
@@ -382,16 +418,17 @@ const CommentItemList = (props) => {
                       }}
                     >
                       <DateParser timestamp={item.timestamp}>
-                        {(timeStamp, timeAgo) => {
+                        {(_timeStamp, timeAgo) => {
                           return `${timeAgo} ago`;
                         }}
                       </DateParser>
                     </div>
                   </li>
+
                 ))}
                 <div
                   id={'reply' + commentTrack.attrs.id}
-                  style={{display: 'none'}}
+                  style={{ display: 'none' }}
                 >
                   <StyledReply
                     commentObj={commentTrack}
@@ -456,6 +493,9 @@ CommentItemList.propTypes = {
       timestamp: PropTypes.number.isRequired,
     })
   ),
+  state: PropTypes.object,
+  view: PropTypes.object
+
 };
 
 CommentItemList.defaultProps = {

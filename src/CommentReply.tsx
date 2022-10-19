@@ -86,7 +86,7 @@ const CommentReply = (props) => {
     }
   };
 
-  const resetValue = (e) => {
+  const resetValue = (_e) => {
     hideReplyDiv(true);
   };
 
@@ -113,7 +113,7 @@ const CommentReply = (props) => {
       comment: comment,
       timestamp: Math.floor(Date.now()),
     };
-    let attrs = {};
+    let attrs;
     if (null === commentObj) {
       attrs = {
         conversation: [],

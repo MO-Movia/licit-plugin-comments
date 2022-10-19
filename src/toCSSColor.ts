@@ -1,4 +1,4 @@
-// @flow
+
 
 import Color from 'color';
 
@@ -10,7 +10,7 @@ const ColorMaping = {
   inherit: '',
 };
 
-export function isTransparent(source: any): boolean {
+export function isTransparent(source: string): boolean {
   if (!source) {
     return true;
   }
@@ -18,7 +18,7 @@ export function isTransparent(source: any): boolean {
   return !hex || hex === RGBA_TRANSPARENT;
 }
 
-export function toCSSColor(source: any): string {
+export function toCSSColor(source: string): string {
   if (!source) {
     return '';
   }
@@ -28,7 +28,7 @@ export function toCSSColor(source: any): string {
 
   if (source && RGBA_PATTERN.test(source)) {
     const color = Color(source);
-    if (color.valpha === 0) {
+    if (color.alpha() === 0) {
       ColorMaping[source] = RGBA_TRANSPARENT;
       return RGBA_TRANSPARENT;
     }

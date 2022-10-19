@@ -1,4 +1,4 @@
-// @flow
+
 
 import { Schema } from 'prosemirror-model';
 import {
@@ -66,7 +66,9 @@ function getAnExistingAttribute(schema) {
 
   try {
     existingAttr = schema['marks']['link']['attrs']['href'];
-  } catch (err) { }
+  } catch (err) {
+    //do nothing
+  }
 
   return existingAttr;
 }

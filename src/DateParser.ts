@@ -30,13 +30,15 @@ const DateParser = props => {
 };
 
 DateParser.propTypes = {
+  children:propTypes.func,
   /** The date string. Can be any date parsable by momentjs. */
-  timestamp: propTypes.oneOfType([propTypes.string, propTypes.number, Date])
-    .isRequired,
+  timestamp: propTypes.oneOfType([propTypes.string, propTypes.number,propTypes.instanceOf(Date)]).isRequired,
   /** Format of the rendered date. */
   dateFormat: propTypes.string,
   /** Humanize duration threshold */
   humanizeThreshold: propTypes.number,
 };
+
+
 
 export default DateParser;

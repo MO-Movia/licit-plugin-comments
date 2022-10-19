@@ -1,7 +1,10 @@
-// @flow
 
 import type { MarkSpec } from './Types';
 
+type HookType ={
+  value,
+  attrs
+};
 const CommentMarkSpec: MarkSpec = {
   attrs: {
     class: { default: 'comment' },
@@ -37,7 +40,7 @@ const CommentMarkSpec: MarkSpec = {
     },
   ],
 
-  toDOM(hook, next) {
+  toDOM(hook:HookType) {
     hook.value = [
       'span',
       {
@@ -52,7 +55,7 @@ const CommentMarkSpec: MarkSpec = {
         'data-appliedHighlight': hook.attrs.appliedHighlight,
       },
     ];
-    return hook.value;
+return hook.value;
   },
 };
 

@@ -1,12 +1,11 @@
-.commentdiv {
+.czi-editor-frameset .molcmt-commentdiv {
   background: white;
   height: 575px;
   position: absolute;
-  right: 63px;
   width: 213px;
 }
 
-.comment-icon {
+.czi-editor-frameset .molcmt-comment-icon {
   display: inline-block;
   position: absolute;
   right: -21px;
@@ -14,19 +13,19 @@
   width: 27px;
 }
 
-.comment-icon::before {
+.czi-editor-frameset .molcmt-comment-icon::before {
   content: url("../asset/CommentIcon.png");
   height: 15px;
   margin-left: -25px;
   width: 15px;
 }
 
-span.comment {
+.czi-editor-frameset span.comment {
   border-bottom: 2px solid gold;
   border-radius: 3px 3px 0 0;
 }
 
-.rcc-collapse {
+.czi-editor-frameset .molcmt-rcc-collapse {
   font-family: sans-serif;
   font-size: 13px;
   margin-top: 5px;
@@ -38,7 +37,7 @@ span.comment {
   cursor: default;
 }
 
-.r-collapse {
+.czi-editor-frameset .molcmt-r-collapse {
   min-height: 15px;
   display: contents;
   font-family: sans-serif;

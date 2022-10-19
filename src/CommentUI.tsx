@@ -1,22 +1,27 @@
-// @flow
+
 
 import React from 'react';
 import styled, {css} from 'styled-components';
 import {grid, th} from '@pubsweet/ui-toolkit';
 import {v4 as uuidv4} from 'uuid';
-
-class CommentUI extends React.PureComponent<any, any> {
+type CommentUIProps={
+  close:() => void;
+};
+type CommentUIState={
+  editorView
+};
+class CommentUI extends React.PureComponent<CommentUIProps,CommentUIState> {
   _popUp = null;
   inputComment = '';
 
-  constructor(props: any) {
+  constructor(props) {
     super(props);
     this.state = {
       ...props,
     };
   }
 
-  setCommentValue(e: any) {
+  setCommentValue(e) {
     this.inputComment = e.target.value;
   }
 
@@ -57,7 +62,7 @@ class CommentUI extends React.PureComponent<any, any> {
     }
   };
 
-  render(): React.Element<any> {
+  render(): React.ReactNode {
     const Wrapper = styled.div`
       background: ${th('colorBackgroundHue')};
       display: flex;

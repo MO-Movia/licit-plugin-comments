@@ -1,5 +1,5 @@
 module.exports = {
-  parser: 'babel-eslint',
+  parser: '@typescript-eslint/parser',
   parserOptions: {
     sourceType: 'module',
     allowImportExportEverywhere: false,
@@ -8,8 +8,13 @@ module.exports = {
       jsx: true,
     },
   },
-  plugins: ['react'],
+  plugins: ['@typescript-eslint', 'react'],
   env: {jest: true},
+  extends: [
+    'eslint:recommended',
+    'plugin:@typescript-eslint/eslint-recommended',
+    'plugin:@typescript-eslint/recommended',
+  ],
   rules: {
     'react/jsx-sort-props': 'error',
     'react/jsx-uses-react': 'error',
@@ -23,9 +28,14 @@ module.exports = {
     // The following rule was being reported as misconfigured.  After correcting
     // that, it was reported as not existing at all.
     // "no-unused-expression": [true, "allow-fast-null-checks"],
-    'no-unused-vars': [
+    '@typescript-eslint/no-unused-vars': [
       'error',
-      {vars: 'all', args: 'none', ignoreRestSiblings: false},
+      {
+       vars: 'all',
+        args: 'all',
+        ignoreRestSiblings: false,
+        argsIgnorePattern: '^_',
+},
     ],
     'no-var': 'error',
     'prefer-const': 'error',
@@ -78,4 +88,14 @@ module.exports = {
     setTimeout: false,
     window: false,
   },
+overrides: [
+    {
+      // enable jest globals in test files
+      files: '*.test.ts',
+      plugins: ['jest'],
+      env: {
+        'jest/globals': true,
+      },
+    },
+  ],
 };

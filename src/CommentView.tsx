@@ -1,4 +1,4 @@
-// @flow
+
 
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -9,11 +9,13 @@ import CommentItemList from './CommentItemList';
 import CommentUI from './CommentUI';
 import {getCommentContainer} from './utils/document/DocumentHelpers';
 import {COMMENT_KEY} from './Constants';
+import { EditorState } from 'prosemirror-state';
 
 export type CBFn = () => void;
 
 export class CommentView {
   view: EditorView;
+  state:EditorState;
   getCurPos: CBFn;
   dom: HTMLElement;
 
@@ -31,18 +33,30 @@ export class CommentView {
     const editorDiv = getCommentContainer(this.view);
     if (editorDiv) {
       commentDiv = editorDiv.querySelector('#' + COMMENT_KEY);
+      let add = false;
       if (!commentDiv) {
-        const newDiv = document.createElement('div');
-        newDiv.id = COMMENT_KEY;
-        newDiv.className = 'commentdiv';
-        newDiv.style.position = 'absolute';
-        newDiv.style.width = '250px';
-        newDiv.style.background = 'transparent';
-        newDiv.style.right = '17px';
-        newDiv.style.top = '20px';
-        newDiv.style.minHeight = '576px';
-        editorDiv.appendChild(newDiv);
-        commentDiv = newDiv;
+        add = true;
+        commentDiv = document.createElement('div');
+        commentDiv.id = COMMENT_KEY;
+        commentDiv.className = 'molcmt-commentdiv';
+        commentDiv.style.position = 'absolute';
+        commentDiv.style.background = 'transparent';
+        commentDiv.style.top = '20px';
+        commentDiv.style.minHeight = '576px';
+      }
+
+      let padding = editorDiv.offsetWidth - editorDiv.clientWidth;
+      if (0 === padding) {
+        padding = this.view.dom.offsetWidth - this.view.dom.clientWidth;
+        if (0 === padding) {
+          padding = this.view.dom.scrollWidth - this.view.dom.clientWidth;
+        }
+      }
+      commentDiv.style.width =
+        editorDiv.clientWidth - (this.view.dom.offsetWidth + padding) + 'px';
+      commentDiv.style.left = this.view.dom.offsetWidth + padding + 'px';
+      if (add) {
+        editorDiv.appendChild(commentDiv);
       }
     }
 
@@ -72,7 +86,6 @@ export class CommentView {
         return true;
       });
       this.view.dom.style.marginLeft = setMarginLeft ? '10px' : 'auto';
-      this.setCommentDivWidth(commentDiv);
       ReactDOM.render(
         <CommentItemList
           active={active}
@@ -85,29 +98,6 @@ export class CommentView {
     }
   }
 
-  setCommentDivWidth(commentDiv) {
-    commentDiv.style.width = '19%';
-    switch (this.view.state.doc.attrs.layout) {
-      case 'us_letter_landscape':
-        commentDiv.style.right = '-108px';
-        break;
-      case 'a4_portrait':
-        commentDiv.style.right = '20px';
-        break;
-      case 'a4_landscape':
-        commentDiv.style.right = '-144px';
-        break;
-      case 'desktop_screen_4_3':
-        commentDiv.style.right = '41px';
-        break;
-      case 'desktop_screen_16_9':
-        commentDiv.style.right = '-34px';
-        break;
-      default:
-        commentDiv.style.right = '14px';
-        break;
-    }
-  }
   execute(from: number, event: PointerEvent) {
     const anchor1 = event ? event.currentTarget : null;
     const viewPops = {

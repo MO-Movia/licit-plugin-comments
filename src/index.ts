@@ -1,29 +1,36 @@
 // /* eslint-disable */
 
-import {EditorState, Plugin, PluginKey, Transaction} from 'prosemirror-state';
-import {Decoration, DecorationSet} from 'prosemirror-view';
-import {Schema} from 'prosemirror-model';
-import {CommentView} from './CommentView';
+import { EditorState, Plugin, PluginKey, Transaction } from 'prosemirror-state';
+import { Decoration, DecorationSet } from 'prosemirror-view';
+import { Node, Schema } from 'prosemirror-model';
+import { CommentView } from './CommentView';
 import CommentMarkSpec from './CommentMarkSpec';
 import './Comment.css';
 import '@modusoperandi/licit-ui-commands/dist/ui/czi-pop-up.css';
-import {applyEffectiveSchema} from './CommentSchema';
-import {COMMENT_KEY} from './Constants';
+import { applyEffectiveSchema } from './CommentSchema';
+import { COMMENT_KEY } from './Constants';
 import {
   getCommentContainer,
   HIGHLIGHTDECO,
 } from './utils/document/DocumentHelpers';
+import OrderedMap from 'orderedmap';
 
 const commentPlugin = new PluginKey(COMMENT_KEY);
 const MARKTYPE = 'comment';
 
 export class CommentPlugin extends Plugin {
+
   constructor() {
     super({
       key: commentPlugin,
       state: {
         init(_config, state) {
-          const {doc} = state;
+          window.addEventListener('resize', () => {
+            if (this.spec.commentView) {
+              this.spec.commentView.getCommentUI();
+            }
+          });
+          const { doc } = state;
           return commentDeco(doc, state);
         },
         apply(tr, _prev, _, newState) {
@@ -38,7 +45,7 @@ export class CommentPlugin extends Plugin {
         return this.commentView;
       },
       props: {
-        nodeViews: [],
+        nodeViews: {},
         decorations(state) {
           return this.getState(state);
         },
@@ -64,7 +71,7 @@ export class CommentPlugin extends Plugin {
     const commentmark = {
       comment: CommentMarkSpec,
     };
-    const marks = schema.spec.marks.append(commentmark);
+    const marks = (schema.spec.marks as OrderedMap).append(commentmark);
     return new Schema({
       nodes: nodes,
       marks: marks,
@@ -97,25 +104,33 @@ function validateSelection(state) {
     } else {
       const node = state.tr.doc.nodeAt(state.selection.from);
       if (node) {
-        if (
-          (node.marks &&
-            node.marks.find((mark) => mark.type.name === 'link')) ||
-          'math' === node.type.name
-        ) {
-          return false;
-        }
+        return hideCommentIcon(node);
       }
     }
   }
   return showCommentIcon;
 }
 
-function commentDeco(doc, state, commentView, tr) {
+function hideCommentIcon(node: Node) {
+  if (
+    (node.marks &&
+      node.marks.find(
+        (mark) =>
+          'link' === mark.type.name || 'comment' === mark.type.name
+      )) ||
+    'math' === node.type.name
+  ) {
+    return false;
+  }
+  return true;
+}
+
+function commentDeco(doc, state, commentView?, tr?) {
   const decos = [];
   if (validateSelection(state)) {
     decos.push(
       Decoration.inline(state.selection.from, state.selection.to, {
-        class: 'problem',
+        class: 'molcmt-problem',
       }),
       Decoration.widget(
         state.selection.from,
@@ -200,9 +215,10 @@ function clearCommentHighlight(view) {
 function commentIcon(hideIcon, state, commentView) {
   const icon = document.createElement('div');
   icon.id = 'commentIcon' + state.selection.from;
-  icon.className = 'comment-icon';
+  icon.className = 'molcmt-comment-icon';
   icon.style.visibility = hideIcon ? 'hidden' : 'visible';
   icon.style.marginLeft = '15px';
+  icon.style.marginRight = '23px';
 
   if (commentView) {
     const commentUIDiv = getCommentContainer(commentView.view).querySelector(
