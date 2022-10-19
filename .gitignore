@@ -3,4 +3,4 @@ dist
 *.zip
 bin
 *.tgz
-/src/coverage
+coverage

@@ -12,10 +12,10 @@ fdescribe('CommentHighlightMarkSpec', () => {
         1: {hasComment: true, markFrom: 11, style: 'color: blue'},
       };
     });
-    const node = p('bold');
-    const newNode = toMarkDOM(mockToDOM, node);
+    const n = p('bold');
+    const newNode = toMarkDOM(mockToDOM, n);
 
-    expect(newNode).not.toBe(node);
+    expect(newNode).not.toBe(n);
   });
 
   it('toMarkDOM without properties', () => {
@@ -28,39 +28,45 @@ fdescribe('CommentHighlightMarkSpec', () => {
         1: {hasComment: false, markFrom: 0, style: 'color: blue'},
       };
     });
-    const node = p('bold');
-    const newNode = toMarkDOM(mockToDOM, node);
+    const n = p('bold');
+    const newNode = toMarkDOM(mockToDOM, n);
 
-    expect(newNode).not.toBe(node);
+    expect(newNode).not.toBe(n);
   });
 
   xit('toMarkDOM without props', () => {
-    const mockToDOM = jest.fn((node) => {
+    const mockToDOM = jest.fn((_node) => {
       return {
         0: 'one',
       };
     });
-    const node = p('bold');
-    const newNode = toMarkDOM(mockToDOM, node);
+    const n = p('bold');
+    const newNode = toMarkDOM(mockToDOM, n);
 
-    expect(newNode).not.toBe(node);
+    expect(newNode).not.toBe(n);
   });
 
-  it('getMarkAttrs transparent', () => {
-    const mockGetAttrs = jest.fn((dom) => {
-      return {
-        hasComment: dom.getAttribute('hasComment'),
-        markFrom: dom.getAttribute('markFrom'),
-      };
-    });
-    const dom = document.createElement('span');
-    dom.setAttribute('hasComment', 'true');
-    dom.setAttribute('markFrom', '1');
-    dom.style.backgroundColor = 'transparent';
-    dom.style.zIndex = '1';
-    dom.style.opacity = '0.25';
+  const mockGetAttrs = jest.fn((dom) => {
+    return {
+      hasComment: dom.getAttribute('hasComment'),
+      markFrom: dom.getAttribute('markFrom'),
+    };
+  });
 
-    expect(getMarkAttrs(mockGetAttrs, dom)).not.toBe({
+  const getSpan = (color) => {
+    const span = document.createElement('span');
+    span.setAttribute('hasComment', 'true');
+    span.setAttribute('markFrom', '1');
+    span.style.backgroundColor = color;
+    span.style.zIndex = '1';
+    span.style.opacity = '0.25';
+    return span;
+  };
+
+  it('getMarkAttrs transparent', () => {
+    const span = getSpan('transparent');
+
+    expect(getMarkAttrs(mockGetAttrs, span)).not.toBe({
       highlightColor: '',
       hasComment: true,
       markFrom: 1,
@@ -68,20 +74,9 @@ fdescribe('CommentHighlightMarkSpec', () => {
   });
 
   it('getMarkAttrs solid color', () => {
-    const mockGetAttrs = jest.fn((dom) => {
-      return {
-        hasComment: dom.getAttribute('hasComment'),
-        markFrom: dom.getAttribute('markFrom'),
-      };
-    });
-    const dom = document.createElement('span');
-    dom.setAttribute('hasComment', 'true');
-    dom.setAttribute('markFrom', '1');
-    dom.style.backgroundColor = '#c40df2';
-    dom.style.zIndex = '2';
-    dom.style.opacity = '0.25';
+    const span = getSpan('#c40df2');
 
-    expect(getMarkAttrs(mockGetAttrs, dom)).not.toBe({
+    expect(getMarkAttrs(mockGetAttrs, span)).not.toBe({
       highlightColor: '',
       hasComment: true,
       markFrom: 1,

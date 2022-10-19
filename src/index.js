@@ -1,51 +1,59 @@
 // /* eslint-disable */
 
-import { Plugin, PluginKey } from 'prosemirror-state';
-import { Decoration, DecorationSet } from 'prosemirror-view';
-import { Schema } from 'prosemirror-model';
-import { CommentView } from './CommentView';
+import {EditorState, Plugin, PluginKey, Transaction} from 'prosemirror-state';
+import {Decoration, DecorationSet} from 'prosemirror-view';
+import {Schema} from 'prosemirror-model';
+import {CommentView} from './CommentView';
 import CommentMarkSpec from './CommentMarkSpec';
 import './Comment.css';
 import '@modusoperandi/licit-ui-commands/dist/ui/czi-pop-up.css';
-import { applyEffectiveSchema } from './CommentSchema';
+import {applyEffectiveSchema} from './CommentSchema';
+import {COMMENT_KEY} from './Constants';
+import {
+  getCommentContainer,
+  HIGHLIGHTDECO,
+} from './utils/document/DocumentHelpers';
 
-const commentPlugin = new PluginKey('commentPlugin');
+const commentPlugin = new PluginKey(COMMENT_KEY);
 const MARKTYPE = 'comment';
-let commentView;
 
 export class CommentPlugin extends Plugin {
   constructor() {
     super({
       key: commentPlugin,
       state: {
-        init(config, state) {
-          const {
-            doc
-          } = state;
+        init(_config, state) {
+          const {doc} = state;
           return commentDeco(doc, state);
         },
-        apply(tr, prev, _, newState) {
-          if (commentView) {
-            commentView.showCommentList();
+        apply(tr, _prev, _, newState) {
+          if (this.spec.commentView) {
+            this.spec.commentView.showCommentList(newState);
           }
-          return commentDeco(tr.doc, newState);
+          return commentDeco(tr.doc, newState, this.spec.commentView, tr);
         },
       },
       view(editorView) {
-        commentView = new CommentView(editorView);
-        return commentView;
+        this.commentView = new CommentView(editorView);
+        return this.commentView;
       },
       props: {
         nodeViews: [],
-        decorations(state) { return this.getState(state); },
+        decorations(state) {
+          return this.getState(state);
+        },
         handleDOMEvents: {
           mouseover(view, event) {
-            highLightComment(view, event, true);
+            highLightComment(view, event, true, this.spec.commentView);
           },
           mouseout(view, event) {
-            highLightComment(view, event, false);
+            highLightComment(view, event, false, this.spec.commentView);
           },
         },
+      },
+      filterTransaction(tr: Transaction, _state: EditorState): boolean {
+        // skip if the highlight thru collab
+        return !isHighlightViaCollab(tr);
       },
     });
   }
@@ -54,7 +62,7 @@ export class CommentPlugin extends Plugin {
     schema = applyEffectiveSchema(schema);
     const nodes = schema.spec.nodes;
     const commentmark = {
-      'comment': CommentMarkSpec
+      comment: CommentMarkSpec,
     };
     const marks = schema.spec.marks.append(commentmark);
     return new Schema({
@@ -64,22 +72,36 @@ export class CommentPlugin extends Plugin {
   }
 }
 
+function isHighlightViaCollab(tr: Transaction) {
+  let viaCollab = false;
+  let isHighlight = false;
+
+  viaCollab = !!tr.getMeta('collab$');
+  if (viaCollab) {
+    isHighlight = !!tr.getMeta(HIGHLIGHTDECO);
+  }
+
+  return isHighlight && viaCollab;
+}
+
 function validateSelection(state) {
   const showCommentIcon = true;
   if (state.selection.from === state.selection.to) {
     return false;
-  }
-  else {
-    if (state.selection.node && 'paragraph' !== state.selection.node.type.name) {
+  } else {
+    if (
+      state.selection.node &&
+      'paragraph' !== state.selection.node.type.name
+    ) {
       return false;
-    }
-    else {
+    } else {
       const node = state.tr.doc.nodeAt(state.selection.from);
       if (node) {
-        if (node.marks && node.marks.find(mark => mark.type.name === 'link')) {
-          return false;
-        }
-        else if ('math' === node.type.name) {
+        if (
+          (node.marks &&
+            node.marks.find((mark) => mark.type.name === 'link')) ||
+          'math' === node.type.name
+        ) {
           return false;
         }
       }
@@ -88,18 +110,37 @@ function validateSelection(state) {
   return showCommentIcon;
 }
 
-function commentDeco(doc, state) {
-  if (!validateSelection(state)) {
-    return null;
-  }
+function commentDeco(doc, state, commentView, tr) {
   const decos = [];
-  decos.push(Decoration.inline(state.selection.from, state.selection.to, {
-    class: 'problem'
-  }), Decoration.widget(state.selection.from, commentIcon(state.selection.empty, state)));
-  return DecorationSet.create(doc, decos);
+  if (validateSelection(state)) {
+    decos.push(
+      Decoration.inline(state.selection.from, state.selection.to, {
+        class: 'problem',
+      }),
+      Decoration.widget(
+        state.selection.from,
+        commentIcon(state.selection.empty, state, commentView)
+      )
+    );
+  }
+
+  if (tr) {
+    let d = tr.getMeta(HIGHLIGHTDECO);
+    if (!d) {
+      const t = tr.getMeta('appendedTransaction');
+      if (t) {
+        d = t.getMeta(HIGHLIGHTDECO);
+      }
+    }
+
+    if (d) {
+      decos.push(d);
+    }
+  }
+  return 0 < decos.length ? DecorationSet.create(doc, decos) : null;
 }
 
-function highLightComment(view, e, highlight) {
+function highLightComment(view, e, highlight, commentView) {
   if (commentView) {
     let clientY = 0;
     clientY = e.clientY;
@@ -109,7 +150,7 @@ function highLightComment(view, e, highlight) {
 
     const nodePos = view.posAtCoords({
       left: e.clientX,
-      top: clientY
+      top: clientY,
     });
 
     let pos = null;
@@ -125,48 +166,51 @@ function highLightComment(view, e, highlight) {
 
 function showCommentHighlight(view, pos, highlight) {
   const parentNode = view.state.tr.doc.nodeAt(pos);
-  if (parentNode) {
-    if (parentNode.marks) {
-      let markFound;
-      const actualMark = parentNode.marks.find(mark => mark.type.name === MARKTYPE);
-      if (actualMark) {
-        clearCommentHighlight();
-        markFound = {
-          attrs: actualMark.attrs,
-        };
-      }
-      else {
-        clearCommentHighlight();
-      }
-      if (markFound) {
-        const commentDiv = document.getElementById('comment' + markFound.attrs.conversation[0].timestamp);
-        if (commentDiv) {
-          commentDiv.style.backgroundColor = highlight ? '#e9d8d8' : 'transparent';
-        }
+  if (parentNode && parentNode.marks) {
+    let markFound;
+    const actualMark = parentNode.marks.find(
+      (mark) => mark.type.name === MARKTYPE
+    );
+    clearCommentHighlight(view);
+    if (actualMark) {
+      markFound = {
+        attrs: actualMark.attrs,
+      };
+      const commentDiv = getCommentContainer(view).querySelector(
+        '#comment' + markFound.attrs.conversation[0].timestamp
+      );
+      if (commentDiv) {
+        commentDiv.style.backgroundColor = highlight
+          ? '#e9d8d8'
+          : 'transparent';
       }
     }
-  }
-  else {
-    clearCommentHighlight();
+  } else {
+    clearCommentHighlight(view);
   }
 }
 
-function clearCommentHighlight() {
-  const commentList = document.getElementsByTagName('li');
+function clearCommentHighlight(view) {
+  const commentList = getCommentContainer(view).querySelectorAll('li');
   for (let i = 0, len = commentList.length; i < len; i++) {
     commentList[i].style.backgroundColor = 'transparent';
   }
 }
 
-function commentIcon(hideIcon, state) {
+function commentIcon(hideIcon, state, commentView) {
   const icon = document.createElement('div');
   icon.id = 'commentIcon' + state.selection.from;
   icon.className = 'comment-icon';
   icon.style.visibility = hideIcon ? 'hidden' : 'visible';
   icon.style.marginLeft = '15px';
-  const commentUIDiv = document.getElementById('commentUIDiv');
-  if (commentUIDiv) {
-    commentUIDiv.style.visibility = icon.style.visibility;
+
+  if (commentView) {
+    const commentUIDiv = getCommentContainer(commentView.view).querySelector(
+      '#commentUIDiv'
+    );
+    if (commentUIDiv) {
+      commentUIDiv.style.visibility = icon.style.visibility;
+    }
   }
 
   icon.onclick = function (e) {
