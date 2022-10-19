@@ -493,8 +493,8 @@ CommentItemList.propTypes = {
       timestamp: PropTypes.number.isRequired,
     })
   ),
-  state: propTypes.object,
-  view: propTypes.object
+  state: PropTypes.object,
+  view: PropTypes.object
 
 };
 
