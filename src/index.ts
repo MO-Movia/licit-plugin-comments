@@ -208,7 +208,11 @@ function showCommentHighlight(view, pos, highlight) {
 function clearCommentHighlight(view) {
   const commentList = getCommentContainer(view).querySelectorAll('li');
   for (let i = 0, len = commentList.length; i < len; i++) {
-    commentList[i].style.backgroundColor = 'transparent';
+    let bkgClr = commentList[i].style.backgroundColor;
+    // Set transparent only if a color is set to avoid unnecessary calls.
+    if ('' !== bkgClr && 'transparent' !== bkgClr) {
+      bkgClr = 'transparent';
+    }
   }
 }
 
