@@ -62,21 +62,6 @@ const findChildrenByMark = (node, markType, descend) => {
   return findChildren(node, (child) => markType.isInSet(child.marks), descend);
 };
 
-const getCommentWordPos = (tr, commentId) => {
-  let commentNodePos = 0;
-  tr.doc.descendants((node, pos) => {
-    if (node.marks && 0 < node.marks.length) {
-      node.marks.some((mark) => {
-        if ('comment' === mark.type.name && mark.attrs.id === commentId) {
-          commentNodePos = pos;
-        }
-      });
-    }
-    return true;
-  });
-  return commentNodePos;
-};
-
 const selectTheHighlightColor = (
   showCommenthighlight,
   onclick,
