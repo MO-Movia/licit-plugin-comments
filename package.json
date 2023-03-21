@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "style": "dist/styles.css",
   "scripts": {
-    "test": "jest --passWithNoTests",
+    "test": "jest --coverage",
     "build:clean": "rm -rf dist/ && rm -f modusoperandi-licit-comment-*.*.*.tgz",
     "build:ts": "tsc -p tsconfig.json",
     "webpack": "webpack",
