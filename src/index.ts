@@ -4,7 +4,7 @@ import { EditorState, Plugin, PluginKey, Transaction } from 'prosemirror-state';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 import { Node, Schema } from 'prosemirror-model';
 import { CommentView } from './CommentView';
-import CommentMarkSpec from './CommentMarkSpec';
+import CommentMarkSpec from './commentMarkSpec';
 import './Comment.css';
 import '@modusoperandi/licit-ui-commands/dist/ui/czi-pop-up.css';
 import { applyEffectiveSchema } from './CommentSchema';
